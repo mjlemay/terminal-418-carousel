@@ -3,6 +3,8 @@
 @tailwind utilities;
 
 :root {
+  --hot-pink: #fa66f7;
+  --neon-green: #c1ff72;
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
@@ -10,20 +12,32 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
+    --hot-pink: #fa66f7;
+    --neon-green: #c1ff72;
     --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
+    --background-start-rgb: 30, 30, 30;
+    --background-end-rgb: 30, 30, 30;
   }
 }
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  background: linear-gradient(0deg, #1E1E1EFF 1%, #41214EFF 25%, #3b4360FF 36%, #2f5065FF 42%, #32755eFF 49%, #627337FF 56%, #705d2eFF 63%, #5C301AFF 71%, #321C14FF 80%, #1E1E1Eff 100%);
+}
+
+.viewer {
+  overflow: hidden;
+}
+.viewframe {
+  position: relative;
+}
+.pane {
+  position: absolute;
+  left: 100vw;
+  min-width: 100%;
+}
+.selected {
+  left: auto;
 }
 
 @layer utilities {
