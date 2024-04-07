@@ -8,17 +8,11 @@ interface ChartProps {
   
     return (
       <div>
+                <h2>Charts</h2>
         {children}
-      <p>Kramer leaned back. "You can see the situation. How can we deal with a factor like this? The perfect variable."
-      </p><p>
-"Perfect? Prediction should still be possible. A living thing still acts from necessity, the same as inanimate material. But the cause-effect chain is more subtle; there are more factors to be considered. The difference is quantitative, I think. The reaction of the living organism parallels natural causation, but with greater complexity."
+      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean pretium mauris faucibus purus mattis, at placerat metus congue. Maecenas vitae finibus lorem. In in enim sapien. Nullam aliquet mauris odio, non vestibulum dolor consequat luctus. Mauris auctor elit at est porta, sit amet tincidunt felis posuere. Cras ornare magna in efficitur scelerisque. Aliquam erat volutpat. Nulla vestibulum, orci ac molestie ornare, risus ipsum iaculis odio, eu interdum lorem nunc sit amet nulla.
 </p><p>
-Gross and Kramer looked up at the board plates, suspended on the wall, still dripping, the images hardening into place. Kramer traced a line with his pencil.
-</p><p>
-"See that? It's a pseudopodium. They're alive, and so far, a weapon we can't beat. No mechanical system can compete with that, simple or intricate. We'll have to scrap the Johnson Control and find something else."
-</p><p>
-"Meanwhile the war continues as it is. Stalemate. Checkmate. They can't get to us, and we can't get through their living minefield."
-</p>  
+Pellentesque sollicitudin orci nec elit mattis, luctus viverra risus porttitor. Nulla nec tellus vitae elit dapibus imperdiet eget ut nisl. Vivamus finibus purus in posuere ullamcorper. Aenean nec felis eget eros accumsan egestas viverra non tellus. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec vulputate lacus ut maximus imperdiet. Aenean dui felis, sodales vitae egestas at, placerat vitae mauris. Vivamus tristique orci mattis, consectetur massa sed, condimentum metus. Nam erat arcu, suscipit et est sit amet, tincidunt porttitor odio. Morbi malesuada diam imperdiet orci commodo, sit amet mollis tellus commodo. Phasellus a aliquam purus, quis dapibus elit. Vivamus sed dui sapien. Cras augue diam, bibendum et velit nec, pretium egestas urna.</p>  
       </div>
     )
   }

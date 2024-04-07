@@ -8,16 +8,10 @@ interface GameProps {
   
     return (
       <div>
+                <h2>Game</h2>
         {children}
     <h1>Chapter I</h1>
-    <p>
-Red and Slim found the two strange little animals the morning after they heard the thunder sounds. They knew that they could never show their new pets to their parents.
-</p><p>
-There was a spatter of pebbles against the window and the youngster stirred in his sleep. Another, and he was awake.
-</p><p>
-He sat up stiffly in bed. Seconds passed while he interpreted his strange surroundings. He wasn't in his own home, of course. This was out in the country. It was colder than it should be and there was green at the window.
-</p><p>
-"Slim!"
+    <p>Ut lacinia magna fringilla arcu rhoncus, quis lacinia leo auctor. Duis vestibulum nec sem sodales scelerisque. Nam congue, dui eget mattis scelerisque, nunc dolor accumsan diam, ac bibendum arcu magna quis augue. In condimentum efficitur sapien, quis volutpat lacus volutpat eu. Cras scelerisque aliquam sapien, commodo cursus libero tempor ac. Nulla facilisi. Donec vehicula erat at sem viverra fringilla. Curabitur neque tortor, ultricies at dui in, fermentum laoreet mauris. Mauris ex dolor, consequat id rutrum in, vulputate venenatis neque. Integer posuere justo enim. Ut sit amet neque semper, dignissim orci at, dictum nunc. Aliquam vel nisi lacus. Vestibulum varius lacus vitae odio ultrices pellentesque. Nunc commodo lobortis dolor at commodo. Donec vehicula egestas quam eget maximus. Morbi maximus vehicula gravida.
 </p>
       </div>
     )

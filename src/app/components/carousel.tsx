@@ -1,43 +1,41 @@
 "use client";
 
-import { Children, ReactNode, useCallback, useEffect, useState } from "react";
+import { Children, ReactNode, useCallback, useEffect, useState } from 'react';
+import { useInterval, useStep } from 'usehooks-ts';
 
 interface CarouselProps {
     children?: ReactNode;
   }
 
-const TIME = 15000;
+const TIME = 5000;
+const MAX_STEPS = 4;
   
 export default function Carousel(props:CarouselProps):JSX.Element {
     const { children } = props;
+    let [isPlaying, setPlaying] = useState(true);
+    let [currentStep, stepHelpers] = useStep(MAX_STEPS); //number of allowed panes
 
-    let [selected, setSelected] = useState(0);
+    const { goToNextStep, reset } = stepHelpers;
 
     const panes = Children.map(children, (child, index) => {
-        return (<div className={`pane ${index === selected && 'selected'} container border w-100% border-green h-[calc(100vh-64px)]`}>
+        return (<div className={`pane ${index + 1 === currentStep && 'selected'} container border w-100% border-green h-[calc(100vh-64px)]`}>
             {child}
         </div>)
     })
 
-    const newSelected = useCallback(() => {
-        let nextSelect = selected++;
-        console.log('nextSelect', nextSelect);
-        const childCount: number = panes?.length || 0;
-        if (nextSelect >= childCount) {
-            nextSelect = 0;
-        }
-        return nextSelect;
-    }, [panes?.length, selected])
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            const nextSelected = newSelected();
-            setSelected(nextSelected);
-            console.log('nextSelected', nextSelected)
-        }, TIME);
-      
-        return () => clearInterval(interval);
-      }, [newSelected]);
+    useInterval(
+        () => {
+          // Your custom logic here
+          console.log('currentStep', currentStep);
+          if (currentStep !== MAX_STEPS) {
+            goToNextStep();
+          } else {
+            reset();
+          }
+        },
+        // Delay in milliseconds or null to stop it
+        isPlaying ? TIME : null,
+      )
 
 
     return (
