@@ -7,10 +7,10 @@ interface  MapProps {
     const { children } = props;
   
     return (
-      <div>
-        <h2>Map</h2>
+      <section className="cyberpunk border-none flex h-full flex-col items-center justify-center">
+        <h2 className="cyberpunk">Map</h2>
         {children}
         <p>Nulla vestibulum tempor elit id feugiat.</p>
-      </div>
+      </section>
     )
   }
