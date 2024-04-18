@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import Orbitron from "next/font/local";
 import "./globals.css";
 import "./cyberpunk-2077.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const orbitron = Orbitron({ 
+  src:[
+    {path: './fonts/Orbitron-Regular.ttf',weight: '400',},
+    {path: './fonts/Orbitron-Bold.ttf', weight: '700',}
+  ]
+});
+
 
 export const metadata: Metadata = {
   title: "TERMINAL 418",
@@ -17,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={orbitron.className}>{children}</body>
     </html>
   );
 }

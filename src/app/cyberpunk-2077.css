@@ -29,10 +29,6 @@
     font-size: 20px;
   }
   
-  body * {
-    font-family: "Advent Pro", arial;
-  }
-  
   /* Form fields */
   
   input[type="text"].cyberpunk,
