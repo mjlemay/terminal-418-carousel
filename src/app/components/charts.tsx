@@ -25,7 +25,9 @@ interface ChartProps {
 
   const lastFiveDays = () => {
     const calDate = (isoDate: string) => {
-      return isoDate?.split('T')[0];
+      const adjustedDate = moment(isoDate).add(-7, 'hours').format('YYYY-MM-DD');
+      console.log(isoDate, adjustedDate);
+      return adjustedDate;
     }
     const today = moment();
     const minusOne = moment().add(-1, 'days');
@@ -34,18 +36,13 @@ interface ChartProps {
     const minusFour = moment().add(-4, 'days');
     const clonedData = JSON.parse(JSON.stringify(scans));
     const simpleData = clonedData.map((datum:any) => {
-      const aaa = calDate(datum.created_at);
-      datum.created_at = aaa;
-      return datum; 
+      datum.created_at = calDate(datum.created_at);
+      return datum;
     });
     const dayData = countBy(simpleData, 'created_at');
-    // return {
-    //   [today]: dayData[today] || 0,
-    //   [minusOne]: dayData[minusOne] || 0,
-    //   [minusTwo]: dayData[minusTwo] || 0,
-    //   [minusThree]: dayData[minusThree] || 0,
-    //   [minusFour]: dayData[minusFour] || 0,
-    // }
+
+    console.log('simpleData', simpleData);
+
     return [
       {
         day: minusFour.format('ddd'),

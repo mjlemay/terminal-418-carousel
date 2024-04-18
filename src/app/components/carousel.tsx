@@ -46,6 +46,7 @@ const defaultRecord = {
 export default function Carousel(props:CarouselProps):JSX.Element {
     const { children } = props;
     let [isPlaying, setPlaying] = useState(true);
+    let [isCounting, setIsCounting] = useState(false);
     let [rfidCode, setRfidCode] = useState('');
     let [status, setStatus] = useState('');
     let [lastRfidCode, setLastRfidCode] = useState('');
@@ -114,6 +115,16 @@ export default function Carousel(props:CarouselProps):JSX.Element {
         return {"scan_id":10,"raw_value":"796dfa83","mifare_hex":"796dfa83","created_at":"2024-04-17T12:48:48.273Z"};
     }
 
+    const goCount = useCallback(() => {
+        startCountdown();
+        setIsCounting(true);
+    }, [startCountdown]);
+
+    const pauseCount = useCallback(() => {
+        stopCountdown();
+        setIsCounting(false);
+    }, [stopCountdown])
+
     const saveRecord = useCallback((scan:string) => {
         axios.post('/api/scan', {
             code: scan
@@ -158,13 +169,14 @@ export default function Carousel(props:CarouselProps):JSX.Element {
     useClickAnyWhere(() => {
         setPlaying(false);
         resetCountdown();
-        startCountdown();
+        goCount();
     })
     
     useEffect(() => {
         if (count == 0) {
             setPlaying(true);
             resetCountdown();
+            setIsCounting(false);
             setLastRfidCode('')
             setRfidCode('');
             setModalOpen(false);
@@ -176,9 +188,16 @@ export default function Carousel(props:CarouselProps):JSX.Element {
             setStatus('loading');
             saveRecord(lastRfidCode);
             resetCountdown();
-            startCountdown();
+            goCount();
         }
-      }, [lastRfidCode, resetCountdown, saveRecord, startCountdown, status]);
+      }, [goCount, lastRfidCode, resetCountdown, saveRecord, startCountdown, status]);
+
+      useEffect(() => {
+        if (isModalOpen && !isCounting) {
+            resetCountdown();
+            goCount();
+        }
+      }, [goCount, isCounting, isModalOpen, resetCountdown, startCountdown]);
 
       useEffect(() => {
         fetchRecords();
