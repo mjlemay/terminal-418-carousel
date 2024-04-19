@@ -11,7 +11,7 @@ export async function GET() {
   return NextResponse.json({scans: response});
 }
 
-export async function POST(req) {
+export async function POST(req:any) {
   const body = await req.json();
   console.log('body', body);
   const code = body.code || null;

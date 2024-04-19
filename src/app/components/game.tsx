@@ -66,7 +66,7 @@ interface GameProps {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" interval={0} height={50} tick={renderCustomizedLabel}></XAxis>
               <YAxis stroke="#00e6df" />
-              <Bar type="monotone" dataKey="value" stroke="#ffffff" fill="#fa66f7" shape={<TriangleBar />} label={{ position: 'top' }}> />
+              <Bar type="monotone" dataKey="value" stroke="#ffffff" fill="#fa66f7" shape={<TriangleBar />} label={{ position: 'top' }}>
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={colors[index % 20]} />
               ))}

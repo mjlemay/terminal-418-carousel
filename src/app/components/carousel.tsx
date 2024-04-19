@@ -313,7 +313,7 @@ export default function Carousel(props:CarouselProps):JSX.Element {
                             <p className="uppercase text-nowrap text-teal">
                                 Cooldown&nbsp;&nbsp;[ <span className="text-white">1 hr</span> ]
                                 </p>
-                            <p>/// {status} ///</p>
+                            <p>{`||| ${status} |||`}</p>
                             <button className="cyberpunk" onClick={() => gotoPane(2)}>CLICK 2 CONTINUE</button>
                         </div>
                     </div>
