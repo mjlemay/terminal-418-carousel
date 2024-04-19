@@ -87,6 +87,7 @@ export default function Carousel(props:CarouselProps):JSX.Element {
     const gotoPane = (step:number):void => {
         setModalOpen(false);
         setStep(step);
+        setLastRfidCode('');
         setStatus('');
     }
     const buildRfidCode = (char:string) => {
@@ -109,10 +110,6 @@ export default function Carousel(props:CarouselProps):JSX.Element {
             }
             return false;
         })    
-    }
-
-    const checkRecord = (scan:string):Scan => {
-        return {"scan_id":10,"raw_value":"796dfa83","mifare_hex":"796dfa83","created_at":"2024-04-17T12:48:48.273Z"};
     }
 
     const goCount = useCallback(() => {
@@ -144,7 +141,6 @@ export default function Carousel(props:CarouselProps):JSX.Element {
         axios.get('/api/scan')
           .then(function (response:any) {
             const { scans } = response?.data;
-            console.log('scans', scans);
             scans.length >= 1 && setRecords(scans)
           })
           .catch(function (error) {
@@ -184,7 +180,7 @@ export default function Carousel(props:CarouselProps):JSX.Element {
       }, [count, resetCountdown]);
 
       useEffect(() => {
-        if (lastRfidCode.length >= 1 && status === '') {
+        if (lastRfidCode.length >= 4 && status === '') {
             setStatus('loading');
             saveRecord(lastRfidCode);
             resetCountdown();
@@ -200,8 +196,10 @@ export default function Carousel(props:CarouselProps):JSX.Element {
       }, [goCount, isCounting, isModalOpen, resetCountdown, startCountdown]);
 
       useEffect(() => {
-        fetchRecords();
-      }, []);
+        if (currentStep == 1){
+            fetchRecords();
+        }
+      }, [currentStep]);
 
     return (
         <>

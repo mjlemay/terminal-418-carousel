@@ -5,7 +5,7 @@ import { isValidHex } from '@/app/lib/hex';
 export async function GET() {
 
   const response = await sql` 
-    select * from scans
+    SELECT * FROM scans ORDER BY created_at DESC 
   `
 
   return NextResponse.json({scans: response});

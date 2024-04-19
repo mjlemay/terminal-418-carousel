@@ -1,34 +1,32 @@
 'use client';
-import { useEffect } from "react";
 import { Scan } from "../lib/types";
 import { countBy } from "lodash";
 import moment from "moment";
-import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
+import { Area, ComposedChart, ResponsiveContainer, XAxis, YAxis, Legend, Line, ReferenceLine } from "recharts";
 
 
 interface ChartProps {
-    children?: React.ReactNode;
     scans?: Scan[];
+  }
+
+  const dailyGoals:any = {
+    Mon: 0,
+    Tue: 10,
+    Wed: 100,
+    Thu: 250,
+    Fri: 500,
+    Sat: 800,
+    Sun: 1000,
   }
   
   export default function Charts(props:ChartProps):JSX.Element {
-    const { children, scans } = props;
+    const { scans = [] } = props;
 
-    useEffect(() => {
-      console.log('scans', scans);
-    }, [scans]);
-
-    const uniqueScanCountsData = () => {
-      const pieData = countBy(scans, 'raw_value');
-      return pieData; 
-  };
-
-  const lastFiveDays = () => {
-    const calDate = (isoDate: string) => {
-      const adjustedDate = moment(isoDate).add(-7, 'hours').format('YYYY-MM-DD');
-      console.log(isoDate, adjustedDate);
-      return adjustedDate;
-    }
+    const lastFiveDays = () => {
+      const calDate = (isoDate: string) => {
+        const adjustedDate = moment(isoDate).add(-7, 'hours').format('YYYY-MM-DD');
+        return adjustedDate;
+      }
     const today = moment();
     const minusOne = moment().add(-1, 'days');
     const minusTwo = moment().add(-2, 'days');
@@ -41,28 +39,32 @@ interface ChartProps {
     });
     const dayData = countBy(simpleData, 'created_at');
 
-    console.log('simpleData', simpleData);
 
     return [
       {
         day: minusFour.format('ddd'),
-        value: dayData[minusFour.format('YYYY-MM-DD')] || 0
+        scans: dayData[minusFour.format('YYYY-MM-DD')] || 0,
+        goal: dailyGoals[minusFour.format('ddd')],
       },
       {
         day: minusThree.format('ddd'),
-        value: dayData[minusThree.format('YYYY-MM-DD')] || 0
+        scans: dayData[minusThree.format('YYYY-MM-DD')] || 0,
+        goal: dailyGoals[minusThree.format('ddd')],
       },
       {
         day: minusTwo.format('ddd'),
-        value: dayData[minusTwo.format('YYYY-MM-DD')] || 0
+        scans: dayData[minusTwo.format('YYYY-MM-DD')] || 0,
+        goal: dailyGoals[minusTwo.format('ddd')],
       },
       {
         day: minusOne.format('ddd'),
-        value: dayData[minusOne.format('YYYY-MM-DD')] || 0
+        scans: dayData[minusOne.format('YYYY-MM-DD')] || 0,
+        goal: dailyGoals[minusOne.format('ddd')],
       },
       {
         day: today.format('ddd'),
-        value: dayData[today.format('YYYY-MM-DD')] || 0
+        scans: dayData[today.format('YYYY-MM-DD')] || 0,
+        goal: dailyGoals[today.format('ddd')],
       },
     ]
 };
@@ -70,12 +72,15 @@ interface ChartProps {
     return (
       <section className="cyberpunk border-none flex h-full flex-col items-center justify-center">
           <h2 className="cyberpunk">Daily Scans</h2>
-          <ResponsiveContainer width="100%" height={400} className={"pt-4"}>
-            <AreaChart data={lastFiveDays()}>
+          <ResponsiveContainer width="100%" height={400} className="pt-4">
+            <ComposedChart data={lastFiveDays()}>
               <XAxis dataKey="day" stroke="#00e6df" />
               <YAxis stroke="#00e6df" />
-              <Area type="monotone" dataKey="value" stroke="#ffffff" fill="#fa66f7" />
-            </AreaChart>
+              <Legend />
+              <ReferenceLine y={1000} stroke="#c1ff72" />
+              <Line type="monotone" dataKey="goal" stroke="#c1ff72" strokeDasharray="5 5" />
+              <Area type="monotone" dataKey="scans" stroke="#fa66f7" fill="#fa66f7" />
+            </ComposedChart>
           </ResponsiveContainer>
       </section>
     )
