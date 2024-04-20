@@ -9,7 +9,7 @@ interface DateRelativeProps {
     const { timeStamp = '' } = props;
 
     const getDuration = () => {
-      let now = moment()
+      let now = moment();
       let created = moment(timeStamp).add(-7, 'hours');
       let duration = moment.duration(created.diff(now));
       return duration.humanize();

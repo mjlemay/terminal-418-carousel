@@ -4,11 +4,13 @@ import { Children, ReactNode, cloneElement, useCallback, useEffect, useState } f
 import { useClickAnyWhere, useCountdown, useInterval, useStep } from 'usehooks-ts';
 import KeyboardEventHandler from 'react-keyboard-event-handler';
 import axios from 'axios';
+import moment from 'moment';
 import { isValidHex } from '../lib/hex';
 import Baudot from 'next/font/local';
 import Wave from '../svgs/wave';
 import Rfid from '../svgs/rfid';
 
+const COOL_DOWN = 15;
 
 interface CarouselProps {
     children?: ReactNode;
@@ -94,23 +96,43 @@ export default function Carousel(props:CarouselProps):JSX.Element {
         if (char !== 'enter') {
             const newCode = rfidCode + char;
             setRfidCode(newCode);
+            setLastRfidCode('');
+            setModalOpen(false);
         }
         if (char === 'enter') {
-            console.log('rfidCode', rfidCode);
             setLastRfidCode(rfidCode);
             setModalOpen(true);
             setRfidCode('');
         }
     };
 
-    const hasRecord = (code:string):boolean => {
+    const hasRecord = useCallback((code:string):boolean => {
         return records?.some(function (r) {
             if (r?.raw_value === code) {
                 return true;
             }
             return false;
         })    
-    }
+    }, [records])
+
+    const coolDownTime =  useCallback((code:string):string => {
+        if (hasRecord(code)) {
+           let lastScan = records?.find(scan => {
+            return scan.raw_value === code
+           });
+           let timeStamp = lastScan?.created_at;
+           let now = moment();
+           let created = moment(timeStamp).add(-7, 'hours');
+           let duration = moment.duration(now.diff(created));
+           let waited = duration.asMinutes();
+           if (waited >= COOL_DOWN) {
+            return 'none';
+           }
+           const waitTime = Math.ceil(COOL_DOWN - waited);
+           return `${waitTime} min`
+        }
+        return 'none';
+    }, [hasRecord, records]);
 
     const goCount = useCallback(() => {
         startCountdown();
@@ -123,19 +145,24 @@ export default function Carousel(props:CarouselProps):JSX.Element {
     }, [stopCountdown])
 
     const saveRecord = useCallback((scan:string) => {
-        axios.post('/api/scan', {
-            code: scan
-          })
-          .then(function (response) {
-            console.log(response);
-            setStatus('accepted');
-            fetchRecords();
-          })
-          .catch(function (error) {
-            console.log(error);
-            setStatus('error');
-          });
-    }, []);
+        if (coolDownTime(scan) === 'none') {
+            axios.post('/api/scan', {
+                code: scan
+            })
+            .then(function (response) {
+                console.log(response);
+                setStatus('request sent');
+                fetchRecords();
+            })
+            .catch(function (error) {
+                console.log(error);
+                setStatus('Fail: Data corrupted');
+                setStatus('error');
+            });
+        } else {
+            setStatus('Fail: Cool Down Incomplete');
+        }
+    }, [coolDownTime]);
 
     const fetchRecords = () => {
         axios.get('/api/scan')
@@ -296,7 +323,7 @@ export default function Carousel(props:CarouselProps):JSX.Element {
                             <Rfid />
                         </div>
                         <div className="flex-auto w-64 p-4">
-                            <h1 className="cyberpunk">N E O F O B<br/> ATTEMPT DETECTED</h1>
+                            <h1 className="cyberpunk">N•E•O•F•O•B<br/> ATTEMPT DETECTED</h1>
                             <h5 className="cyberpunk text-red uppercase text-nowrap">|| Warning: validation corrupted</h5>
                             <p className="uppercase text-nowrap text-teal">
                                 $ byte UID&nbsp;&nbsp;[ {isValidHex(lastRfidCode)
@@ -311,10 +338,13 @@ export default function Carousel(props:CarouselProps):JSX.Element {
                                    ? (<span className="text-green">pass</span>) : (<span className="text-red">fail</span>) } ]
                             </p>
                             <p className="uppercase text-nowrap text-teal">
-                                Cooldown&nbsp;&nbsp;[ <span className="text-white">1 hr</span> ]
+                                Cooldown&nbsp;&nbsp;[ <span className="text-white">{coolDownTime(lastRfidCode)}</span> ]
                                 </p>
                             <p>{`||| ${status} |||`}</p>
-                            <button className="cyberpunk" onClick={() => gotoPane(2)}>CLICK 2 CONTINUE</button>
+                            <p>{(coolDownTime(lastRfidCode) === '15 min' && status === 'request sent' ) ? (<span className="text-green">APPROVED</span>) : (<span className="text-red">REJECTED</span>) }</p>
+                            <button 
+                                className={`cyberpunk ${(coolDownTime(lastRfidCode) === '15 min' && status === 'request sent') && 'green'}`}
+                                onClick={() => gotoPane(2)}>CLICK 2 CONTINUE</button>
                         </div>
                     </div>
                 </div>
