@@ -20,7 +20,7 @@ interface  SummaryProps {
                 <h3 className="cyberpunk">TECHNICAINS NEEDED</h3>
                 <p className="cyberpunk m-4">
                     We need help to activate the foundry!<br /><br />
-                    Please help us reach our quota by scanning your <b>Neofob</b> regularly.<br /><br />
+                    Please help us reach our quota by scanning your <b>NeoBand</b> regularly.<br /><br />
                     An AI bot will do the rest!
                 </p>
                 <h3 className="cyberpunk">AI BOTS</h3>

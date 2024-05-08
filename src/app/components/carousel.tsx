@@ -323,7 +323,7 @@ export default function Carousel(props:CarouselProps):JSX.Element {
                             <Rfid />
                         </div>
                         <div className="flex-auto w-64 p-4">
-                            <h1 className="cyberpunk">N•E•O•F•O•B<br/> ATTEMPT DETECTED</h1>
+                            <h1 className="cyberpunk">N•E•O•B•A•N•D<br/> ATTEMPT DETECTED</h1>
                             <h5 className="cyberpunk text-red uppercase text-nowrap">|| Warning: validation corrupted</h5>
                             <p className="uppercase text-nowrap text-teal">
                                 $ byte UID&nbsp;&nbsp;[ {isValidHex(lastRfidCode)
