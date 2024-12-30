@@ -2,7 +2,6 @@
 
 import { Children, ReactNode, cloneElement, useCallback, useEffect, useState } from 'react';
 import { useClickAnyWhere, useCountdown, useInterval, useStep } from 'usehooks-ts';
-import KeyboardEventHandler from 'react-keyboard-event-handler';
 import axios from 'axios';
 import moment from 'moment';
 import { isValidHex } from '../lib/hex';
@@ -230,9 +229,6 @@ export default function Carousel(props:CarouselProps):JSX.Element {
 
     return (
         <>
-          <KeyboardEventHandler
-              handleKeys={['alphanumeric', 'enter']}
-              onKeyEvent={(key:any) => buildRfidCode(key)} />
         <div className="absolute size-full overflow-hidden">
             <div className={`absolute w-[300vw] top-[30vh] opacity-20`} style={{left: offsetBg(currentStep)}}>
                 <Wave />

@@ -1,34 +1,26 @@
 import { NextResponse } from 'next/server';
-import sql from '@/app/lib/db';
+import db from '@/db/db';
+import { scans } from '@/db/schema';
 import { isValidHex } from '@/app/lib/hex';
  
 export async function GET() {
 
-  const response = await sql` 
-    SELECT * FROM scans ORDER BY created_at DESC 
-  `
+  // const response = await sql` 
+  //   SELECT * FROM scans ORDER BY created_at DESC 
+  // `
+  const response = await db
+  .select()
+	.from(scans);
 
   return NextResponse.json({scans: response});
 }
 
 export async function POST(req:any) {
   const body = await req.json();
-  console.log('body', body);
-  const code = body.code || null;
-  const date = new Date();
-  const now = date.toISOString();
+  const code:string = isValidHex(body.code) ? body.code : null;
+  let scan = { scan_id: code }
 
-  let scan = {
-    raw_value: code || '' ,
-    mifare_hex: isValidHex(code) ? code : null,
-    created_at: now,
-  }
-
-  const response = await sql`
-    insert into scans ${
-      sql(scan, 'raw_value', 'mifare_hex', 'created_at')
-    }
-  `
+  const response = await db.insert(scans).values(scan);
 
   return NextResponse.json(response);
 }
