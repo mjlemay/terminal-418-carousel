@@ -1,9 +1,24 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# TERMINAL 418 KIOSK CAROUSEL
 
 ## Getting Started
 
-First, run the development server:
+First, Make sure you have a .env file with the following values:
+```bash
+DB_HOST = http://localhost:5432  # url for local build or whatever the cdb is hosted
+DB_USER = pgUserName  # user name to access you postgres database
+DB_PASSWORD = pgUserPassword  # user password to access you postgres database
+DB_NAME = pgDbName  # database to save the tables to
+``` 
 
+Next, run the installer and udpate:
+```bash
+npm install
+npx drizzle-kit generate
+npx drizzle-kit pull
+npx drizzle-hit push
+```
+
+Then, run the development server:
 ```bash
 npm run dev
 # or
@@ -17,20 +32,3 @@ bun dev
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
