@@ -15,7 +15,7 @@ Next, run the installer and udpate:
 npm install
 npx drizzle-kit generate
 npx drizzle-kit pull
-npx drizzle-hit push
+npx drizzle-kit push
 ```
 
 Then, run the development server:

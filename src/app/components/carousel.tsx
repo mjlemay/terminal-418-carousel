@@ -2,6 +2,7 @@
 
 import { Children, ReactNode, cloneElement, useCallback, useEffect, useState } from 'react';
 import { useClickAnyWhere, useCountdown, useInterval, useStep } from 'usehooks-ts';
+import { useRFIDNumber } from '../hooks/useRFIDNumber';
 import axios from 'axios';
 import moment from 'moment';
 import { isValidHex } from '../lib/hex';
@@ -37,23 +38,18 @@ const baudot = Baudot({
     ]
   });
 
-const defaultRecord = {
-    scan_id: 0,
-    raw_value: '',
-    mifare_hex: '',
-    created_at: new Date().toISOString(),
-}
 
 export default function Carousel(props:CarouselProps):JSX.Element {
     const { children } = props;
-    let [isPlaying, setPlaying] = useState(true);
-    let [isCounting, setIsCounting] = useState(false);
-    let [rfidCode, setRfidCode] = useState('');
-    let [status, setStatus] = useState('');
-    let [lastRfidCode, setLastRfidCode] = useState('');
-    let [records, setRecords] = useState([] as Scan[]);
-    let [isModalOpen, setModalOpen] = useState(false);
+    const [isPlaying, setPlaying] = useState(true);
+    const [isCounting, setIsCounting] = useState(false);
+    const [rfidCode, setRfidCode] = useState('');
+    const [ readReady, setReadReady ] = useState(true);
+    const [status, setStatus] = useState('');
+    const [records, setRecords] = useState([] as Scan[]);
+    const [isModalOpen, setModalOpen] = useState(false);
     let [currentStep, stepHelpers] = useStep(MAX_STEPS); //number of allowed panes
+    const rifdNumber = useRFIDNumber(readReady);
     const { goToNextStep, reset, setStep } = stepHelpers;
     const [count, { startCountdown, stopCountdown, resetCountdown }] =
     useCountdown({
@@ -88,22 +84,9 @@ export default function Carousel(props:CarouselProps):JSX.Element {
     const gotoPane = (step:number):void => {
         setModalOpen(false);
         setStep(step);
-        setLastRfidCode('');
+        setRfidCode('');
         setStatus('');
     }
-    const buildRfidCode = (char:string) => {
-        if (char !== 'enter') {
-            const newCode = rfidCode + char;
-            setRfidCode(newCode);
-            setLastRfidCode('');
-            setModalOpen(false);
-        }
-        if (char === 'enter') {
-            setLastRfidCode(rfidCode);
-            setModalOpen(true);
-            setRfidCode('');
-        }
-    };
 
     const hasRecord = useCallback((code:string):boolean => {
         return records?.some(function (r) {
@@ -144,6 +127,7 @@ export default function Carousel(props:CarouselProps):JSX.Element {
     }, [stopCountdown])
 
     const saveRecord = useCallback((scan:string) => {
+        console.log('scan to post', scan);
         if (coolDownTime(scan) === 'none') {
             axios.post('/api/scan', {
                 code: scan
@@ -199,20 +183,21 @@ export default function Carousel(props:CarouselProps):JSX.Element {
             setPlaying(true);
             resetCountdown();
             setIsCounting(false);
-            setLastRfidCode('')
+            setRfidCode('')
             setRfidCode('');
             setModalOpen(false);
         }
       }, [count, resetCountdown]);
 
+
       useEffect(() => {
-        if (lastRfidCode.length >= 4 && status === '') {
+        if (rifdNumber.length >= 4 && status === '') {
             setStatus('loading');
-            saveRecord(lastRfidCode);
+            saveRecord(rifdNumber);
             resetCountdown();
             goCount();
         }
-      }, [goCount, lastRfidCode, resetCountdown, saveRecord, startCountdown, status]);
+      },[goCount, resetCountdown, rifdNumber, saveRecord, startCountdown, status]);
 
       useEffect(() => {
         if (isModalOpen && !isCounting) {
@@ -322,24 +307,24 @@ export default function Carousel(props:CarouselProps):JSX.Element {
                             <h1 className="cyberpunk">N•E•O•B•A•N•D<br/> ATTEMPT DETECTED</h1>
                             <h5 className="cyberpunk text-red uppercase text-nowrap">|| Warning: validation corrupted</h5>
                             <p className="uppercase text-nowrap text-teal">
-                                $ byte UID&nbsp;&nbsp;[ {isValidHex(lastRfidCode)
+                                $ byte UID&nbsp;&nbsp;[ {isValidHex(rfidCode)
                                     ? (<span className="text-green">pass</span>) : (<span className="text-red">fail</span>) } ]
                                 </p>
                             <p className="uppercase text-nowrap  text-teal">
-                                Dig1t LENGTH&nbsp;&nbsp;[ {lastRfidCode.length == 8
+                                Dig1t LENGTH&nbsp;&nbsp;[ {rfidCode.length == 8
                                    ? (<span className="text-green">pass</span>) : (<span className="text-red">fail</span>) } ]
                                 </p>
                             <p className="uppercase text-nowrap text-teal">
-                                User R3cord&nbsp;&nbsp;[ {hasRecord(lastRfidCode)
+                                User R3cord&nbsp;&nbsp;[ {hasRecord(rfidCode)
                                    ? (<span className="text-green">pass</span>) : (<span className="text-red">fail</span>) } ]
                             </p>
                             <p className="uppercase text-nowrap text-teal">
-                                Cooldown&nbsp;&nbsp;[ <span className="text-white">{coolDownTime(lastRfidCode)}</span> ]
+                                Cooldown&nbsp;&nbsp;[ <span className="text-white">{coolDownTime(rfidCode)}</span> ]
                                 </p>
                             <p>{`||| ${status} |||`}</p>
-                            <p>{(coolDownTime(lastRfidCode) === '15 min' && status === 'request sent' ) ? (<span className="text-green">APPROVED</span>) : (<span className="text-red">REJECTED</span>) }</p>
+                            <p>{(coolDownTime(rfidCode) === '15 min' && status === 'request sent' ) ? (<span className="text-green">APPROVED</span>) : (<span className="text-red">REJECTED</span>) }</p>
                             <button 
-                                className={`cyberpunk ${(coolDownTime(lastRfidCode) === '15 min' && status === 'request sent') && 'green'}`}
+                                className={`cyberpunk ${(coolDownTime(rfidCode) === '15 min' && status === 'request sent') && 'green'}`}
                                 onClick={() => gotoPane(2)}>CLICK 2 CONTINUE</button>
                         </div>
                     </div>
