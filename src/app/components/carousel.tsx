@@ -7,7 +7,6 @@ import axios from 'axios';
 import moment from 'moment';
 import { isValidHex } from '../lib/hex';
 import Baudot from 'next/font/local';
-import Wave from '../svgs/wave';
 import Rfid from '../svgs/rfid';
 
 const COOL_DOWN = 15;
@@ -214,11 +213,6 @@ export default function Carousel(props:CarouselProps):JSX.Element {
 
     return (
         <>
-        <div className="absolute size-full overflow-hidden">
-            <div className={`absolute w-[300vw] top-[30vh] opacity-20`} style={{left: offsetBg(currentStep)}}>
-                <Wave />
-            </div>
-        </div>
     <div
         className="flex min-h-screen flex-row items-center justify-between p-8 gap-x-8 relative"
         onContextMenu={(event)=> stopClick(event)}

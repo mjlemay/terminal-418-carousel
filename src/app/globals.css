@@ -25,7 +25,7 @@
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(0deg, #1E1E1EFF 1%, #41214EFF 25%, #3b4360FF 36%, #2f5065FF 42%, #32755eFF 49%, #627337FF 56%, #705d2eFF 63%, #5C301AFF 71%, #321C14FF 80%, #1E1E1Eff 100%);
+  background: #000;  
 }
 
 .viewer {
