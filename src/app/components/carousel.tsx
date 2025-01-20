@@ -76,10 +76,6 @@ export default function Carousel(props:CarouselProps):JSX.Element {
         return false;
     }
 
-    const offsetBg = (step:number):string => {
-        return `-${step * 20}vw`
-    }
-    
     const gotoPane = (step:number):void => {
         setModalOpen(false);
         setStep(step);
