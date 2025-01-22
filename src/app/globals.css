@@ -23,6 +23,25 @@
   }
 }
 
+.primary-mixin {
+  padding: 1rem;
+  margin:0 0 1rem;
+  --aug-tr:2px;
+  --aug-b-extend1: 50%;
+  --aug-border-all: 2px;
+  --aug-border-bg:radial-gradient(var(--tech-teal), var(--hot-pink)) 100% 100%/100% 100%;
+  --aug-inlay-all: 4px;
+  --aug-inlay-bg:radial-gradient(ellipse at top, var(--hot-pink), transparent) 50% 50%/100% 100%;
+  --aug-inlay-opacity:0.5
+}
+
+.primary-mixin.selected {
+  --aug-inlay-all:6px;
+  --aug-border-bg:radial-gradient(var(--tech-teal), var(--neon-green)) 100% 100%/100% 100%;
+  --aug-inlay-bg:radial-gradient(ellipse at top, var(--tech-teal), transparent) 20% 20%/100% 100%;
+  color: var(--tech-teal);
+}
+
 body {
   color: rgb(var(--foreground-rgb));
   background: #000;  

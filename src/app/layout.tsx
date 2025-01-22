@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Orbitron from "next/font/local";
+import "/node_modules/augmented-ui/augmented-ui.min.css";
 import "./globals.css";
 import "./cyberpunk-2077.css";
+
 
 const orbitron = Orbitron({ 
   src:[
