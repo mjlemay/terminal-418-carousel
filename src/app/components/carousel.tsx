@@ -5,6 +5,7 @@ import { useClickAnyWhere, useCountdown, useInterval, useStep } from 'usehooks-t
 import { useRFIDNumber } from '../hooks/useRFIDNumber';
 import axios from 'axios';
 import moment from 'moment';
+import { AnimatePresence, motion } from 'motion/react';
 import { isValidHex } from '../lib/hex';
 import Baudot from 'next/font/local';
 import Rfid from '../svgs/rfid';
@@ -67,9 +68,18 @@ export default function Carousel(props:CarouselProps):JSX.Element {
 
     const panes = Children.map(children, (child:any, index) => {
         const proppedChild = cloneElement(child, { scans: records });
-        return (<div className={`pane ${index + 1 === currentStep && 'selected'} container w-100% h-[calc(100vh-64px)]`}>
+        const selected = index + 1 === currentStep;
+        return (selected && <motion.div
+            layout
+            className={`container w-100% h-[calc(100vh-64px)]`}
+            layoutId="pane"
+            initial={{ x: 100, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -100, opacity: 0 }}
+            transition={{ type: "ease-in-out" }}
+        >
             {proppedChild}
-        </div>);
+        </motion.div>);
     })
 
     const stopClick = (event: any) => {
@@ -282,7 +292,9 @@ export default function Carousel(props:CarouselProps):JSX.Element {
                 </div>
             </div>
             <div className="viewframe">
-                {panes}
+                <AnimatePresence mode="wait">
+                    {panes}
+                </AnimatePresence>
             </div>
         </div>
      </div>

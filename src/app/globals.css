@@ -53,14 +53,6 @@ body {
 .viewframe {
   position: relative;
 }
-.pane {
-  position: absolute;
-  left: 100vw;
-  min-width: 100%;
-}
-.selected {
-  left: auto;
-}
 
 @layer utilities {
   .text-balance {

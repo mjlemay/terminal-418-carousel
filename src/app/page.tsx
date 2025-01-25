@@ -23,7 +23,6 @@ export default function Home() {
         <Charts />
         <Game />
         <Recents />
-        <Map />
       </Carousel>
       <TouchPulse />
     </main>
