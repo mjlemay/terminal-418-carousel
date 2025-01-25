@@ -28,7 +28,7 @@ type ScanResponse = {
     scans: Scan[];
 }
 
-const TIME = 5000;
+const TIME = 15000;
 const MAX_STEPS = 4;
 const ONE_SECOND = 1000;
 const PAUSE_MINUTES = 1;
@@ -176,7 +176,7 @@ export default function Carousel(props:CarouselProps):JSX.Element {
         },
         // Delay in milliseconds or null to stop it
         isPlaying ? TIME : null,
-      )
+    )
 
     useClickAnyWhere(() => {
         setPlaying(false);
