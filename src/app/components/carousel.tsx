@@ -2,20 +2,19 @@
 
 import { Children, ReactNode, cloneElement, useCallback, useEffect, useState } from 'react';
 import { useClickAnyWhere, useCountdown, useInterval, useStep } from 'usehooks-ts';
-import { useRFIDNumber } from '../hooks/useRFIDNumber';
-import axios from 'axios';
 import moment from 'moment';
 import { AnimatePresence, motion } from 'motion/react';
-import { isValidHex } from '../lib/hex';
 import Baudot from 'next/font/local';
-import Rfid from '../svgs/rfid';
 import NavButton from './navButton';
 
-const COOL_DOWN = 15;
+const records:any = [];
 
 interface CarouselProps {
     children?: ReactNode;
-  }
+    selectedPane?: string;
+    pauseMinutes?: number;
+    isPaused?: boolean;
+}
 
 type Scan = {
     scan_id: number;
@@ -39,22 +38,16 @@ const baudot = Baudot({
     ]
   });
 
-
 export default function Carousel(props:CarouselProps):JSX.Element {
-    const { children } = props;
+    const { children, pauseMinutes = PAUSE_MINUTES } = props;
+    const carouselSteps = Children.count(children) || MAX_STEPS;
     const [isPlaying, setPlaying] = useState(true);
     const [isCounting, setIsCounting] = useState(false);
-    const [rfidCode, setRfidCode] = useState('');
-    const [ readReady, setReadReady ] = useState(true);
-    const [status, setStatus] = useState('');
-    const [records, setRecords] = useState([] as Scan[]);
-    const [isModalOpen, setModalOpen] = useState(false);
-    let [currentStep, stepHelpers] = useStep(MAX_STEPS); //number of allowed panes
-    const rifdNumber = useRFIDNumber(readReady);
+    let [currentStep, stepHelpers] = useStep(carouselSteps); // number of allowed panes
     const { goToNextStep, reset, setStep } = stepHelpers;
     const [count, { startCountdown, stopCountdown, resetCountdown }] =
     useCountdown({
-      countStart: 60 * PAUSE_MINUTES,
+      countStart: 60 * pauseMinutes,
       intervalMs: ONE_SECOND,
     })
 
@@ -88,39 +81,8 @@ export default function Carousel(props:CarouselProps):JSX.Element {
     }
 
     const gotoPane = (step:number):void => {
-        setModalOpen(false);
         setStep(step);
-        setRfidCode('');
-        setStatus('');
     }
-
-    const hasRecord = useCallback((code:string):boolean => {
-        return records?.some(function (r) {
-            if (r?.raw_value === code) {
-                return true;
-            }
-            return false;
-        })    
-    }, [records])
-
-    const coolDownTime =  useCallback((code:string):string => {
-        if (hasRecord(code)) {
-           let lastScan = records?.find(scan => {
-            return scan.raw_value === code
-           });
-           let timeStamp = lastScan?.created_at;
-           let now = moment();
-           let created = moment(timeStamp).add(-7, 'hours');
-           let duration = moment.duration(now.diff(created));
-           let waited = duration.asMinutes();
-           if (waited >= COOL_DOWN) {
-            return 'none';
-           }
-           const waitTime = Math.ceil(COOL_DOWN - waited);
-           return `${waitTime} min`
-        }
-        return 'none';
-    }, [hasRecord, records]);
 
     const goCount = useCallback(() => {
         startCountdown();
@@ -132,43 +94,9 @@ export default function Carousel(props:CarouselProps):JSX.Element {
         setIsCounting(false);
     }, [stopCountdown])
 
-    const saveRecord = useCallback((scan:string) => {
-        console.log('scan to post', scan);
-        if (coolDownTime(scan) === 'none') {
-            axios.post('/api/scan', {
-                code: scan
-            })
-            .then(function (response) {
-                console.log(response);
-                setStatus('request sent');
-                fetchRecords();
-            })
-            .catch(function (error) {
-                console.log(error);
-                setStatus('Fail: Data corrupted');
-                setStatus('error');
-            });
-        } else {
-            setStatus('Fail: Cool Down Incomplete');
-        }
-    }, [coolDownTime]);
-
-    const fetchRecords = () => {
-        axios.get('/api/scan')
-          .then(function (response:any) {
-            const { scans } = response?.data;
-            scans.length >= 1 && setRecords(scans)
-          })
-          .catch(function (error) {
-            console.log(error);
-            setStatus('error');
-          });
-    }
-
     useInterval(
         () => {
-          // Your custom logic here
-          if (currentStep !== MAX_STEPS) {
+          if (currentStep !== carouselSteps) {
             goToNextStep();
           } else {
             reset();
@@ -189,34 +117,21 @@ export default function Carousel(props:CarouselProps):JSX.Element {
             setPlaying(true);
             resetCountdown();
             setIsCounting(false);
-            setRfidCode('')
-            setRfidCode('');
-            setModalOpen(false);
         }
       }, [count, resetCountdown]);
 
-
       useEffect(() => {
-        if (rifdNumber.length >= 4 && status === '') {
-            setStatus('loading');
-            saveRecord(rifdNumber);
+        if (!isCounting) {
             resetCountdown();
             goCount();
         }
-      },[goCount, resetCountdown, rifdNumber, saveRecord, startCountdown, status]);
+      }, [goCount, isCounting, resetCountdown, startCountdown]);
 
       useEffect(() => {
-        if (isModalOpen && !isCounting) {
-            resetCountdown();
-            goCount();
+        if (props.isPaused) {
+            pauseCount();
         }
-      }, [goCount, isCounting, isModalOpen, resetCountdown, startCountdown]);
-
-      useEffect(() => {
-        if (currentStep == 1){
-            fetchRecords();
-        }
-      }, [currentStep]);
+      }, [props.isPaused, pauseCount]);
 
     return (
         <>
@@ -285,7 +200,7 @@ export default function Carousel(props:CarouselProps):JSX.Element {
         <div className="viewer container relative mx-auto h-[calc(100vh-64px)] border border-pink">
             <div className="absolute size-[5vw] top right-0 min-w-fit">
                 <div className="flex flex-col">
-                    <div className="border border-pink bg-pink pl-2 pr-1 text-right">{(isPlaying || isModalOpen) ? '--:--' : msToTime(count)}</div>
+                    <div className="border border-pink bg-pink pl-2 pr-1 text-right">{(isPlaying) ? '--:--' : msToTime(count)}</div>
                     <p className={`${baudot.className} text-2xl text-right pr-2 text-teal`}>
                         {count * 60}{count * 15}{count * 3}
                     </p>
@@ -298,49 +213,6 @@ export default function Carousel(props:CarouselProps):JSX.Element {
             </div>
         </div>
      </div>
-     {isModalOpen && (
-        <div className="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center bg-black/[.6] items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
-            <div className="relative p-4 w-full max-w-full max-h-full overflow-y-hidden">
-                <div className="flex items-center justify-center h-screen w-full">
-                    <div className="flex border bg-black/[.7] w-screen items-top border-teal">
-                    <div className="absolute size-[5vw] top right-4 min-w-fit">
-                        <div className="border border-teal bg-teal pl-2 pr-1 text-right"> {msToTime(count)}</div>
-                            <p className={`${baudot.className} text-2xl text-right pr-2 text-teal`}>
-                            {count * 15}{count * 77}{count * 3}
-                            </p>
-                        </div>
-                        <div className="bg-teal flex-auto w-32">
-                            <Rfid />
-                        </div>
-                        <div className="flex-auto w-64 p-4">
-                            <h1 className="cyberpunk">N•E•O•B•A•N•D<br/> ATTEMPT DETECTED</h1>
-                            <h5 className="cyberpunk text-red uppercase text-nowrap">|| Warning: validation corrupted</h5>
-                            <p className="uppercase text-nowrap text-teal">
-                                $ byte UID&nbsp;&nbsp;[ {isValidHex(rfidCode)
-                                    ? (<span className="text-green">pass</span>) : (<span className="text-red">fail</span>) } ]
-                                </p>
-                            <p className="uppercase text-nowrap  text-teal">
-                                Dig1t LENGTH&nbsp;&nbsp;[ {rfidCode.length == 8
-                                   ? (<span className="text-green">pass</span>) : (<span className="text-red">fail</span>) } ]
-                                </p>
-                            <p className="uppercase text-nowrap text-teal">
-                                User R3cord&nbsp;&nbsp;[ {hasRecord(rfidCode)
-                                   ? (<span className="text-green">pass</span>) : (<span className="text-red">fail</span>) } ]
-                            </p>
-                            <p className="uppercase text-nowrap text-teal">
-                                Cooldown&nbsp;&nbsp;[ <span className="text-white">{coolDownTime(rfidCode)}</span> ]
-                                </p>
-                            <p>{`||| ${status} |||`}</p>
-                            <p>{(coolDownTime(rfidCode) === '15 min' && status === 'request sent' ) ? (<span className="text-green">APPROVED</span>) : (<span className="text-red">REJECTED</span>) }</p>
-                            <button 
-                                className={`cyberpunk ${(coolDownTime(rfidCode) === '15 min' && status === 'request sent') && 'green'}`}
-                                onClick={() => gotoPane(2)}>CLICK 2 CONTINUE</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    )}
      </>
     )
   }

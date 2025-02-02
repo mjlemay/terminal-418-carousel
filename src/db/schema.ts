@@ -4,6 +4,8 @@ import { relations } from 'drizzle-orm';
 export const scans = pgTable('scans', {
 	id: serial('id').primaryKey(),
     scan_id: text(),
+	device_id: text(),
+	meta: text(),
     created_at: timestamp().defaultNow(),
 });
 

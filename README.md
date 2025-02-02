@@ -8,6 +8,7 @@ DB_HOST = http://localhost:5432  # url for local build or whatever the cdb is ho
 DB_USER = pgUserName  # user name to access you postgres database
 DB_PASSWORD = pgUserPassword  # user password to access you postgres database
 DB_NAME = pgDbName  # database to save the tables to
+DEVICE_NAME = terminal418 #name of the device in the device_id column (optional)
 ``` 
 
 Next, run the installer and udpate:
@@ -30,5 +31,3 @@ bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
