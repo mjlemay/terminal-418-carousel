@@ -1,5 +1,7 @@
 # TERMINAL 418 KIOSK CAROUSEL
 
+This is an app made for a kiosk for Neotropolis. Please run this is Kiosk mode in chrome if possible.
+
 ## Getting Started
 
 First, Make sure you have a .env file with the following values:
