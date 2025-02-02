@@ -11,7 +11,7 @@ DB_NAME = pgDbName  # database to save the tables to
 DEVICE_NAME = terminal418 #name of the device in the device_id column (optional)
 ``` 
 
-Next, run the installer and udpate:
+Next, run the installer and update:
 ```bash
 npm install
 npx drizzle-kit generate
