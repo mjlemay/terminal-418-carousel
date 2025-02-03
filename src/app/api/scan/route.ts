@@ -6,6 +6,7 @@ import { isValidHex } from '@/app/lib/hex';
 const DEVICE_NAME = process.env.DEVICE_NAME || 'unknown_terminal';
 
 export async function GET() {
+  console.log('------ GET SCANS -----');
   const response = await db
   .select()
 	.from(scans);

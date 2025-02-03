@@ -4,14 +4,24 @@ import Watermark from "./components/watermark";
 import Carousel from "./components/carousel";
 import Charts from "./components/charts";
 import Game from "./components/game";
-import Map from "./components/map";
 import BgVideo from "./components/bgVideo";
 import Summary from "./components/summary";
 import Recents from "./components/recents";
+import { Scan } from "./lib/types"; 
 import Terminal418 from "./svgs/terminal418";
 import TouchPulse from "./components/touchPulse";
 
+interface scanState {
+  scans: Scan[],
+  user: object,
+  addScan: (scanId: string) => void,
+  getScans: () => void,
+  // getUser: (scanId: string) => void,
+}
+
 export default function Home() {
+  const scans:Scan[] = [];
+  
   return (
     <main>
       <BgVideo video="video/wave.mp4" />
@@ -20,7 +30,7 @@ export default function Home() {
       </Watermark>
       <Carousel>
         <Summary />
-        <Charts />
+        <Charts scans={scans} />
         <Game />
         <Recents />
       </Carousel>
