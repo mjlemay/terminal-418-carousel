@@ -1,5 +1,6 @@
 'use client';
 
+import { Provider } from "./lib/appContext";
 import Watermark from "./components/watermark";
 import Carousel from "./components/carousel";
 import Charts from "./components/charts";
@@ -15,18 +16,20 @@ export default function Home() {
   const scans:Scan[] = [];
   
   return (
-    <main>
-      <BgVideo video="video/wave.mp4" />
-      <Watermark>
-        <Terminal418 />
-      </Watermark>
-      <Carousel>
-        <Summary />
-        <Charts scans={scans} />
-        <Game />
-        <Recents />
-      </Carousel>
-      <TouchPulse />
-    </main>
+    <Provider>
+      <main>
+        <BgVideo video="video/wave.mp4" />
+        <Watermark>
+          <Terminal418 />
+        </Watermark>
+        <Carousel>
+          <Summary />
+          <Charts scans={scans} />
+          <Game />
+          <Recents />
+        </Carousel>
+        <TouchPulse />
+      </main>
+    </Provider>
   );
 }

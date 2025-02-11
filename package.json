@@ -13,6 +13,7 @@
     "@dicebear/core": "^8.0.1",
     "augmented-ui": "^2.0.0",
     "axios": "^1.6.8",
+    "deepmerge": "^4.3.1",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.38.3",
     "lodash": "^4.17.21",
