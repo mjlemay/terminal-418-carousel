@@ -6,3 +6,11 @@ export type Scan = {
     meta?:string;
     created_at: string;
 }
+
+export interface scanState {
+  scans: Scan[],
+  user: object,
+  addScan: (scanId: string) => void,
+  getScans: () => void,
+  // getUser: (scanId: string) => void,
+}
