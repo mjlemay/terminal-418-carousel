@@ -15,10 +15,11 @@ export const users = pgTable('users', {
 });
 
 export const vinhGame = pgTable('vinhGame', {
-  id: serial('id').primaryKey(),
-  scan_date: date().defaultNow(),
-  node_id: text().notNull(),
-  raw_value: text().notNull(),
+  id: serial('id'),
+  scan_date: text().notNull().primaryKey(),
+  tag_id: text().notNull().primaryKey(),
+  node_id: text().notNull().primaryKey(),
+  extra: text(),
   created_at: timestamp().defaultNow(),
 });
 
