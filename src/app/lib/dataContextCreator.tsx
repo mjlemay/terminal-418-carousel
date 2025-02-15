@@ -2,14 +2,16 @@
 import React from 'react';
 
 const DataContextCreator = (
-  reducer: any, actions: { [x: string]: (arg0: React.DispatchWithoutAction) => any; }, initialState: unknown
+  reducer: any,
+  actions: any,
+  initialState: any
 ) => {
   const Context = React.createContext({state: initialState});
-  const Provider = ({children}: {children: React.ReactNode}) => {
+  const Provider = ({ children }: { children: any}) => {
     const [state, dispatch] = React.useReducer(reducer, initialState);
-    const boundActions: { [key: string]: any } = {};
+    const boundActions:any = {};
     for (let key in actions) {
-      boundActions[key] = actions[key as keyof typeof actions](dispatch);
+      boundActions[key] = actions[key](dispatch);
     }
     const values = {state, ...boundActions};
 

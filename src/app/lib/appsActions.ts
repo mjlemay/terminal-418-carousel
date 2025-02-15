@@ -1,12 +1,51 @@
-import { DispatchFunc } from '../../db/types'
+import { DispatchFunc } from '../lib/types';
+import { requestData } from './requestData';
 
-export const setUser = (dispatch: DispatchFunc) => async (scanId: string | null) => {
-    const data = {
-        uid: scanId
-    }
+
+export const getLogs = (dispatch: DispatchFunc) => async () => {
+    const data = await requestData('/api/scan');
+
     dispatch({
-        type: 'SET_USER',
+        type: 'GET_LOGS',
         payload: data,
     });
+    return data;
+  }
+
+  export const createLog = (dispatch: DispatchFunc) => async () => {
+    const data = await requestData('/api/log');
+
+    dispatch({
+        type: 'CREATE_LOG',
+        payload: data,
+    });
+    getLogs(dispatch);
+
+    return data;
   }
   
+  export const getUser = (dispatch: DispatchFunc) => async (scanId: string | null) => {
+    const defaultUser = {
+        uid: scanId
+    }
+    const data = await requestData('/api/user');
+
+    const user = {...defaultUser, ...data};
+
+    dispatch({
+        type: 'GET_USER',
+        payload: user,
+    });
+  }
+
+  export const putUser = (dispatch: DispatchFunc) => async () => {
+    const data = await requestData('/api/user');
+
+    dispatch({
+        type: 'PUT_USER',
+        payload: data,
+    });
+    return data;
+  }
+
+

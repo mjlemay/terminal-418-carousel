@@ -3,43 +3,51 @@ import merge from 'deepmerge';
 import DataContextCreator from './dataContextCreator';
 import {
   Action,
-  ProviderValues,
+  AppProviderValues,
   UserStore,
-} from '../../db/types';
-import { setUser } from './appsActions';
+} from '../lib/types';
+import {
+    getUser,
+    getLogs
+} from './appsActions';
+
 
 //TODO: ADD ACTION IN SCAN HOOK FOR SETTING USER
-
 
 const appSchema = {
   user: {
     uid: null,
   },
+  logs: []
 }
 
 const appContext:UserStore = merge({}, appSchema);
 
-export const appReducer = (state:ProviderValues, action: Action) => {
+export const appReducer = (state:AppProviderValues, action: Action) => {
+  console.log('appReducer()', state, action);
   const {payload, type = null} = action;
   let newState = null;
   let clonedState = JSON.parse(JSON.stringify(state));
   switch (type) {
-    case 'SET_USER':
+    case 'GET_USER':
       clonedState.user = payload;
-      newState = clonedState;
       break;
-      case 'GET_LOGS':
+    case 'GET_LOGS':
+      clonedState.logs = payload;
       break;
     default:
-      newState = state;
+      break;
   }
+  newState = {...state, ...clonedState};
+  console.log('newState', newState);
   return newState;
 }
 
 export const { Context, Provider } = DataContextCreator(
   appReducer,
   {
-    setUser
+    getLogs,
+    getUser,
   }, 
   appContext
-)
+);
