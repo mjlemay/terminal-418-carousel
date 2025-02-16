@@ -1,5 +1,6 @@
 
 import { useCallback, useContext, useEffect, useState } from "react";
+import { useRFIDNumber } from './hooks/useRFIDNumber';
 import { Context } from "./lib/appContext";
 import {
   AppProviderValues,
@@ -14,15 +15,17 @@ import TouchPulse from "./components/touchPulse";
 import Watermark from "./components/watermark";
 import Terminal418 from "./svgs/terminal418";
 
-export default function Main () {
+const  READ_WAIT = 20000;
 
+export default function Main () {
       const { 
-        state,
+        createLog = () => {},
         getUser = () => {},
         getLogs = () => {},
       }: AppProviderValues = useContext(Context);
       const [loading, setLoading] = useState(true);
-
+      const [readReady, setReadReady] = useState(true);
+      const rifdNumber = useRFIDNumber(readReady);
       const initData = useCallback(() => {
         getLogs();
       }, [getUser]);
@@ -35,6 +38,19 @@ export default function Main () {
         }
       }, [loading, initData]);
 
+
+    useEffect(() => {
+        if (rifdNumber.length >= 4 && !loading) {
+            setLoading(true);
+            createLog(rifdNumber);
+            // getUser(rifdNumber);
+            setTimeout(() => {
+                setReadReady(true);
+                setLoading(false);
+            }, READ_WAIT);
+        }
+      },[rifdNumber]);
+
     return (
         <main>
         <BgVideo video="video/wave.mp4" />
@@ -43,7 +59,7 @@ export default function Main () {
         </Watermark>
         <Carousel>
             <Summary />
-            <Charts scans={state.logs} />
+            <Charts />
             <Game />
             <Recents />
         </Carousel>

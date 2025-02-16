@@ -12,14 +12,14 @@ export const getLogs = (dispatch: DispatchFunc) => async () => {
     return data;
   }
 
-  export const createLog = (dispatch: DispatchFunc) => async () => {
-    const data = await requestData('/api/log');
+  export const createLog = (dispatch: DispatchFunc) => async (scanId: string | null) => {
+    const body = JSON.stringify({scanId});
+    const data = await requestData('/api/scan', body, 'post');
 
     dispatch({
         type: 'CREATE_LOG',
         payload: data,
     });
-    getLogs(dispatch);
 
     return data;
   }

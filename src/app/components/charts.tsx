@@ -1,13 +1,11 @@
 'use client';
-import { Scan } from "../lib/types";
 import { countBy } from "lodash";
 import moment from "moment";
 import { Area, ComposedChart, ResponsiveContainer, XAxis, YAxis, Legend, Line, ReferenceLine } from "recharts";
+import { useContext } from "react";
+import { Context } from "../lib/appContext";
+import { AppProviderValues } from "../lib/types";
 
-
-interface ChartProps {
-    scans?: Scan[];
-  }
 
   const dailyGoals:any = {
     Mon: 0,
@@ -16,11 +14,14 @@ interface ChartProps {
     Thu: 250,
     Fri: 500,
     Sat: 800,
-    Sun: 1000,
+    Sun: 5000,
   }
   
-  export default function Charts(props:ChartProps):JSX.Element {
-    const { scans = [] } = props;
+  export default function Charts():JSX.Element {
+    const { 
+      state
+    }: AppProviderValues = useContext(Context);
+    const { logs } = state;
 
     const lastFiveDays = () => {
       const calDate = (isoDate: string) => {
@@ -32,7 +33,7 @@ interface ChartProps {
     const minusTwo = moment().add(-2, 'days');
     const minusThree = moment().add(-3, 'days');
     const minusFour = moment().add(-4, 'days');
-    const clonedData = JSON.parse(JSON.stringify(scans));
+    const clonedData = JSON.parse(JSON.stringify(logs));
     const simpleData = clonedData.map((datum:any) => {
       datum.created_at = calDate(datum.created_at);
       return datum;

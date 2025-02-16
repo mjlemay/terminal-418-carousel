@@ -11,14 +11,14 @@ export async function GET() {
   .select()
 	.from(scans);
 
-  return NextResponse.json({scans: response});
+  return NextResponse.json(response);
 }
 
 export async function POST(req:any) {
   const body = await req.json();
-  const code:string = isValidHex(body.code) ? body.code : null;
+  const scanId:string = isValidHex(body.scanId) ? body.scanId : null;
   let scan = { 
-    scan_id: code,
+    scan_id: scanId,
     device_id: DEVICE_NAME,
   }
   const response = await db.insert(scans).values(scan);

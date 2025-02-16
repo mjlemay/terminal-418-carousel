@@ -7,8 +7,9 @@ import {
   UserStore,
 } from '../lib/types';
 import {
-    getUser,
-    getLogs
+  createLog,
+  getUser,
+  getLogs
 } from './appsActions';
 
 
@@ -46,6 +47,7 @@ export const appReducer = (state:AppProviderValues, action: Action) => {
 export const { Context, Provider } = DataContextCreator(
   appReducer,
   {
+    createLog, 
     getLogs,
     getUser,
   }, 

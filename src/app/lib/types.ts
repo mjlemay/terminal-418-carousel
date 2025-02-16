@@ -37,6 +37,7 @@ export type DispatchFunc = (dispatch: Action) => void;
 type ProviderDispatch = {
     getLogs: () => void;
     getUser: (scanId: string) => void;
+    createLog: (scanId: string) => void;
 }
 
 type ProviderValues = {

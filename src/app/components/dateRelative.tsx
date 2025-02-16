@@ -1,5 +1,7 @@
 import moment from "moment";
 
+const HRS_OFFSET = process.env.NEXT_PUBLIC_HRS_OFFSET || 0;
+
 interface DateRelativeProps {
     timeStamp: string;
   }
@@ -10,7 +12,7 @@ interface DateRelativeProps {
 
     const getDuration = () => {
       let now = moment();
-      let created = moment(timeStamp).add(-7, 'hours');
+      let created = moment(timeStamp).add(+HRS_OFFSET, 'hours');
       let duration = moment.duration(created.diff(now));
       return duration.humanize();
     }
