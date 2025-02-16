@@ -30,26 +30,27 @@ export default function Game():JSX.Element {
 
     const data = topScanners();
   
-    const getPath = (x:any, y:any, width:any, height:any) => {
+
+    const getPath = (x: number, y: number, width: number, height: number) => {
       return `M${x},${y + height}C${x + width / 3},${y + height} ${x + width / 2},${y + height / 3}
       ${x + width / 2}, ${y}
       C${x + width / 2},${y + height / 3} ${x + (2 * width) / 3},${y + height} ${x + width}, ${y + height}
       Z`;
     };
     
-    const TriangleBar = (props:any) => {
+    const TriangleBar = (props: any) => {
       const { fill, x, y, width, height } = props;
     
       return <path d={getPath(x, y, width, height)} stroke="none" fill={fill} />;
     };
 
-    const renderCustomizedLabel = (props:any) => {
+    const renderCustomizedLabel = (props: any) => {
       const { x, y, payload } = props;
       const { value } = payload;
       return (
         <g  height={100}>
           <foreignObject x={x - 25} y={y} width={100} height={100}>
-            <Avatar seed={value} size={50} style={{marginLeft: '-25px'}} />
+            <Avatar seed={value} size={50} />
           </foreignObject>
         </g>
       );

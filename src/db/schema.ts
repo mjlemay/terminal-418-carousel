@@ -1,4 +1,4 @@
-import { timestamp, serial, text, pgTable } from 'drizzle-orm/pg-core';
+import { timestamp, serial, text, pgTable, date } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 export const scans = pgTable('scans', {
@@ -10,14 +10,23 @@ export const scans = pgTable('scans', {
 });
 
 export const users = pgTable('users', {
-	id: serial('id').primaryKey(),
-    user_id: text().notNull(),
+  id: serial('id').primaryKey(),
+  user_id: text().notNull(),
+});
+
+export const vinhGame = pgTable('vinhGame', {
+  id: serial('id'),
+  scan_date: text().notNull().primaryKey(),
+  tag_id: text().notNull().primaryKey(),
+  node_id: text().notNull().primaryKey(),
+  extra: text(),
+  created_at: timestamp().defaultNow(),
 });
 
 export const usersRelations = relations(users, ({ many }) => ({
-	posts: many(scans),
+  posts: many(scans),
 }));
 
 export const scansRelations = relations(scans, ({ one }) => ({
-	author: one(users, { fields: [scans.id], references: [users.id] }),
+  author: one(users, { fields: [scans.id], references: [users.id] }),
 }));
