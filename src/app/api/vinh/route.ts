@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/db/db';
 import { vinhGame } from '@/db/schema';
+import { eq } from "drizzle-orm";
 import { isValidHex } from '@/app/lib/hex';
  
 const DEVICE_NAME = process.env.DEVICE_NAME || 'unknown_terminal';
@@ -13,8 +14,9 @@ export async function GET(req: any) {
     day: '2-digit',
   });
   const response = await db
-  .select({ tag_id: req.query.tag_id, scan_date: today })
-	.from(vinhGame);
+  .select()
+	.from(vinhGame)
+  .where(eq(vinhGame.scan_date, today));
 
   return NextResponse.json({scans: response});
 }

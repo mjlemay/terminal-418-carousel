@@ -43,7 +43,7 @@ export default function Main () {
         if (rifdNumber.length >= 4 && !loading) {
             setLoading(true);
             createLog(rifdNumber);
-            // getUser(rifdNumber);
+            getUser(rifdNumber);
             setTimeout(() => {
                 setReadReady(true);
                 setLoading(false);

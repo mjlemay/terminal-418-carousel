@@ -14,28 +14,30 @@ export const getLogs = (dispatch: DispatchFunc) => async () => {
 
   export const createLog = (dispatch: DispatchFunc) => async (scanId: string | null) => {
     const body = JSON.stringify({scanId});
-    const data = await requestData('/api/scan', body, 'post');
-
-    dispatch({
-        type: 'CREATE_LOG',
-        payload: data,
-    });
-
-    return data;
+    return requestData('/api/scan', body, 'post');
   }
-  
+
   export const getUser = (dispatch: DispatchFunc) => async (scanId: string | null) => {
     const defaultUser = {
         uid: scanId
     }
-    const data = await requestData('/api/user');
+    const data = await requestData(`/api/user/${scanId}`);
 
-    const user = {...defaultUser, ...data};
-
-    dispatch({
-        type: 'GET_USER',
-        payload: user,
-    });
+    console.log('data', data);
+    if (data && data.length === 0) {
+        dispatch({
+            type: 'GET_USER',
+            payload: defaultUser,
+        });
+        const body = JSON.stringify({scanId});
+        return requestData(`/api/user/${scanId}`, body, 'post');
+    } else {
+        const user = {...defaultUser, ...data};
+        dispatch({
+            type: 'GET_USER',
+            payload: user,
+        });
+    }
   }
 
   export const putUser = (dispatch: DispatchFunc) => async () => {

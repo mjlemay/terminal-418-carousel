@@ -3,22 +3,24 @@ import { relations } from 'drizzle-orm';
 
 export const scans = pgTable('scans', {
 	id: serial('id').primaryKey(),
-    scan_id: text(),
+  scan_id: text(),
 	device_id: text(),
 	meta: text(),
-    created_at: timestamp().defaultNow(),
+  created_at: timestamp().defaultNow(),
 });
 
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
   user_id: text().notNull(),
+	meta: text(),
+  created_at: timestamp().defaultNow(),
 });
 
 export const vinhGame = pgTable('vinhGame', {
-  id: serial('id'),
-  scan_date: text().notNull().primaryKey(),
-  tag_id: text().notNull().primaryKey(),
-  node_id: text().notNull().primaryKey(),
+  id: serial('id').primaryKey(),
+  scan_date: text().notNull(),
+  tag_id: text().notNull(),
+  node_id: text().notNull(),
   extra: text(),
   created_at: timestamp().defaultNow(),
 });

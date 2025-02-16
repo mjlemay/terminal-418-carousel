@@ -25,7 +25,6 @@ const appSchema = {
 const appContext:UserStore = merge({}, appSchema);
 
 export const appReducer = (state:AppProviderValues, action: Action) => {
-  console.log('appReducer()', state, action);
   const {payload, type = null} = action;
   let newState = null;
   let clonedState = JSON.parse(JSON.stringify(state));
