@@ -9,9 +9,8 @@ export type UserStore = {
 }
 
 export type Scan = {
-    scan_id: number;
-    raw_value: string;
-    mifare_hex?: string;
+    id: number;
+    scan_id: string;
     device_id?: string;
     meta?:string;
     created_at: string;
@@ -25,7 +24,7 @@ export interface scanState {
     // getUser: (scanId: string) => void,
 }
 
-export type ActionTypes = 'GET_USER' | 'GET_LOGS' | 'CREATE_LOG' | 'PUT_USER';
+export type ActionTypes = 'GET_USER' | 'GET_LOGS' | 'CREATE_LOG' | 'PUT_USER' | 'UNSET_USER';
 
 export interface Action {
     type: ActionTypes,
@@ -36,6 +35,7 @@ export type DispatchFunc = (dispatch: Action) => void;
 
 type ProviderDispatch = {
     getLogs: () => void;
+    unSetUser: () => void;
     getUser: (scanId: string) => void;
     createLog: (scanId: string) => void;
 }

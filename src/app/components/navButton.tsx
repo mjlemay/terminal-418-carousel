@@ -10,7 +10,7 @@ interface NBProps {
     return (
         <button
             className={`${selected && 'selected'} primary-mixin w-full h-full text-center justify-center items-center flex`}
-            data-augmented-ui="tl-clip tr-clip-x br-clip bl-clip both"
+            data-augmented-ui="tl-clip tr-clip-x br-clip-x bl-clip both"
         >
             {children}
         </button>

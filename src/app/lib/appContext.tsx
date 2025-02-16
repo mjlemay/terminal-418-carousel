@@ -9,8 +9,10 @@ import {
 import {
   createLog,
   getUser,
-  getLogs
+  getLogs,
+  unSetUser
 } from './appsActions';
+import { unset } from 'lodash';
 
 
 //TODO: ADD ACTION IN SCAN HOOK FOR SETTING USER
@@ -35,6 +37,9 @@ export const appReducer = (state:AppProviderValues, action: Action) => {
     case 'GET_LOGS':
       clonedState.logs = payload;
       break;
+    case 'UNSET_USER':
+      clonedState.user = appSchema;
+      break;
     default:
       break;
   }
@@ -49,6 +54,7 @@ export const { Context, Provider } = DataContextCreator(
     createLog, 
     getLogs,
     getUser,
+    unSetUser,
   }, 
   appContext
 );

@@ -14,7 +14,7 @@ import { AppProviderValues } from "../lib/types";
     Thu: 250,
     Fri: 500,
     Sat: 800,
-    Sun: 5000,
+    Sun: 1000,
   }
   
   export default function Charts():JSX.Element {

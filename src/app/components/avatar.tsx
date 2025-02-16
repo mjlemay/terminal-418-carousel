@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import Image from 'next/image';
 import { createAvatar, schema } from '@dicebear/core';
-import { bottts } from '@dicebear/collection';
+import { rings } from '@dicebear/collection';
 
 interface AvatarProps {
     seed?: string;
@@ -17,17 +17,15 @@ export default function Avatar(props:AvatarProps):JSX.Element {
     const options: any = {
         size,
         seed:cleanString,
-        baseColor:["fa66f7","c1ff72","00e6df","E02A64","5b44c9","b957ce","ff0066","d1f7ff","ff9760"],
-        backgroundColor: ["1E1E1E","41214E", "705d2e", "32755e", "01012b"],
-        backgroundType: ["gradientLinear","solid"],
+        baseColor:["1E1E1E","41214E","705d2e","32755e","5b44c9","b957ce","ff0066","d1f7ff","ff9760"],
       };
 
-    return createAvatar(bottts, {...options}).toDataUriSync();
+    return createAvatar(rings, {...options}).toDataUriSync();
   }, [seed, size]);
 
   return (
-    <div className="avatar">
-        <Image className="saturate-200" src={avatar} width={size} height={size} alt="Avatar" />
+    <div className="avatar opacity-95 bg-blue-500 rounded-full shadow-lg shadow-blue-500/50 animate-pulse">
+        <Image className="saturate-200 animate-spin-slow" src={avatar} width={size} height={size} alt="Avatar" />
     </div>
     );
 };

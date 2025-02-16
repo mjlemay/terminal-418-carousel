@@ -2,8 +2,11 @@
 
 import { Children, ReactNode, cloneElement, useCallback, useEffect, useState } from 'react';
 import { useClickAnyWhere, useCountdown, useInterval, useStep } from 'usehooks-ts';
-import moment from 'moment';
+import { useContext } from 'react';
+import { Context } from '../lib/appContext';
+import { AppProviderValues } from '../lib/types';
 import { AnimatePresence, motion } from 'motion/react';
+import UserScreen from './userScreen';
 import Baudot from 'next/font/local';
 import NavButton from './navButton';
 
@@ -40,6 +43,11 @@ const baudot = Baudot({
 
 export default function Carousel(props:CarouselProps):JSX.Element {
     const { children, pauseMinutes = PAUSE_MINUTES } = props;
+    const { 
+        state,
+        unSetUser = () => {},
+      }: AppProviderValues = useContext(Context);
+    const { user } = state;
     const carouselSteps = Children.count(children) || MAX_STEPS;
     const [isPlaying, setPlaying] = useState(true);
     const [isCounting, setIsCounting] = useState(false);
@@ -50,6 +58,7 @@ export default function Carousel(props:CarouselProps):JSX.Element {
       countStart: 60 * pauseMinutes,
       intervalMs: ONE_SECOND,
     })
+    const isLoggedIn = user && user.uid;
 
     const msToTime = (ms:number):string => {
         const minutes = Math.floor(count / 60);
@@ -82,6 +91,7 @@ export default function Carousel(props:CarouselProps):JSX.Element {
 
     const gotoPane = (step:number):void => {
         setStep(step);
+        unSetUser();
     }
 
     const goCount = useCallback(() => {
@@ -101,6 +111,7 @@ export default function Carousel(props:CarouselProps):JSX.Element {
           } else {
             reset();
           }
+          unSetUser();
         },
         // Delay in milliseconds or null to stop it
         isPlaying ? TIME : null,
@@ -118,7 +129,7 @@ export default function Carousel(props:CarouselProps):JSX.Element {
             resetCountdown();
             setIsCounting(false);
         }
-      }, [count, resetCountdown]);
+    }, [count, resetCountdown]);
 
       useEffect(() => {
         if (!isCounting) {
@@ -132,6 +143,7 @@ export default function Carousel(props:CarouselProps):JSX.Element {
             pauseCount();
         }
       }, [props.isPaused, pauseCount]);
+
 
     return (
         <>
@@ -208,7 +220,7 @@ export default function Carousel(props:CarouselProps):JSX.Element {
             </div>
             <div className="viewframe">
                 <AnimatePresence mode="wait">
-                    {panes}
+                    {isLoggedIn ? <UserScreen /> : panes}
                 </AnimatePresence>
             </div>
         </div>

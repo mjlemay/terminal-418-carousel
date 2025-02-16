@@ -12,12 +12,12 @@ export const getLogs = (dispatch: DispatchFunc) => async () => {
     return data;
   }
 
-  export const createLog = (dispatch: DispatchFunc) => async (scanId: string | null) => {
+export const createLog = (dispatch: DispatchFunc) => async (scanId: string | null) => {
     const body = JSON.stringify({scanId});
     return requestData('/api/scan', body, 'post');
-  }
+}
 
-  export const getUser = (dispatch: DispatchFunc) => async (scanId: string | null) => {
+export const getUser = (dispatch: DispatchFunc) => async (scanId: string | null) => {
     const defaultUser = {
         uid: scanId
     }
@@ -38,9 +38,9 @@ export const getLogs = (dispatch: DispatchFunc) => async () => {
             payload: user,
         });
     }
-  }
+}
 
-  export const putUser = (dispatch: DispatchFunc) => async () => {
+export const putUser = (dispatch: DispatchFunc) => async () => {
     const data = await requestData('/api/user');
 
     dispatch({
@@ -48,6 +48,12 @@ export const getLogs = (dispatch: DispatchFunc) => async () => {
         payload: data,
     });
     return data;
-  }
+}
 
+export const unSetUser = (dispatch: DispatchFunc) => () => {
+    dispatch({
+        type: 'UNSET_USER'
+    });
+    return;
+}
 

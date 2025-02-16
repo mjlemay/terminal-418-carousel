@@ -1,4 +1,3 @@
-import Image from 'next/image'
 import Terminal418 from '../svgs/terminal418';
 import Avatar from './avatar';
 
