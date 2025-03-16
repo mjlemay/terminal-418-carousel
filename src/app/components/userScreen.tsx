@@ -6,7 +6,7 @@ import { AppProviderValues } from '../lib/types';
 import { useContext, useState } from 'react';
 import { Context } from '../lib/appContext';
 import StateBlockRow from './statblockRow';
-import { s } from 'motion/react-client';
+import ValueSelectorRow from './valueSelectorRow';
 
 export default function userScreen(): JSX.Element {
     const { state, unSetUser = () => { } }: AppProviderValues = useContext(Context);
@@ -15,6 +15,7 @@ export default function userScreen(): JSX.Element {
     const logCount = logs ? logs.length : 0;
     const userLogCount = logs ? logs.filter((log) => log.scan_id === uid).length : 0;
     const [activity, setActivity] = useState('pip');
+    const [selector, setSelector] = useState(0);
 
 
     const activityPane = (activityName: string) => {
@@ -27,7 +28,12 @@ export default function userScreen(): JSX.Element {
                 </div>
             </>,
             config: <>
-                 <h2 className="cyberpunk mb-4">TECHNICIAN CONFIGURATION</h2>
+                <h2 className="cyberpunk mb-4">TECHNICIAN CONFIGURATION</h2>
+                <ValueSelectorRow title="SELECT SPONSOR" selectedIndex={selector} clickHandler={(num) => setSelector(num)}>
+                    <span>SPONSOR 1</span>
+                    <span>SPONSOR 2</span>
+                    <span>BANANA</span>
+                </ValueSelectorRow>
             </>,
         }
 

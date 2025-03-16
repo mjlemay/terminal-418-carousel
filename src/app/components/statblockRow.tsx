@@ -1,4 +1,3 @@
-import { ReactHTMLElement } from "react"
 
 type SBProps = {
     icon: React.ReactNode;
