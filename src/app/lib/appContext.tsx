@@ -44,7 +44,6 @@ export const appReducer = (state:AppProviderValues, action: Action) => {
       break;
   }
   newState = {...state, ...clonedState};
-  console.log('newState', newState);
   return newState;
 }
 

@@ -15,6 +15,12 @@ import TouchPulse from "./components/touchPulse";
 import Watermark from "./components/watermark";
 import Terminal418 from "./svgs/terminal418";
 
+
+interface NfcData {
+  uid: string;
+}
+
+
 const  READ_WAIT = 20000;
 
 export default function Main () {
@@ -25,6 +31,8 @@ export default function Main () {
       }: AppProviderValues = useContext(Context);
       const [loading, setLoading] = useState(true);
       const [readReady, setReadReady] = useState(true);
+      const [nfcData, setNfcData] = useState<NfcData | null>(null);
+      const [error, setError] = useState<string | null>(null);
       const rifdNumber = useRFIDNumber(readReady);
       const initData = useCallback(() => {
         getLogs();
@@ -40,16 +48,46 @@ export default function Main () {
 
 
     useEffect(() => {
-        if (rifdNumber.length >= 4 && !loading) {
-            setLoading(true);
-            createLog(rifdNumber);
-            getUser(rifdNumber);
-            setTimeout(() => {
-                setReadReady(true);
-                setLoading(false);
-            }, READ_WAIT);
-        }
-      },[rifdNumber]);
+      if (rifdNumber.length >= 4 && !loading) {
+          setLoading(true);
+          createLog(rifdNumber);
+          getUser(rifdNumber);
+          setTimeout(() => {
+              setReadReady(true);
+              setLoading(false);
+          }, READ_WAIT);
+      }
+    },[rifdNumber]);
+
+    useEffect(() => {
+      const ws = new WebSocket('ws://localhost:3000/api/nfc');
+  
+      ws.onopen = () => {
+        console.log('WebSocket connection opened');
+        setError(null); // Clear any previous errors
+      };
+  
+      ws.onmessage = (event) => {
+        const data: NfcData = JSON.parse(event.data);
+        setNfcData(data);
+        console.log('message data', data)
+      };
+  
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        setError('Failed to connect to the WebSocket server.');
+      };
+  
+      ws.onclose = () => {
+        console.log('WebSocket connection closed');
+        setError('WebSocket connection closed.');
+      };
+  
+      return () => {
+        ws.close();
+      };
+    }, []);
+    
 
     return (
         <main>

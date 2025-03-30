@@ -2,14 +2,14 @@
 import { Children, cloneElement } from 'react';
 
 type VSProps = {
-    title: string;
+    title?: string;
     children?: React.ReactNode;
     selectedIndex?: number;
     clickHandler?: (num:number) => void;
 }
 
 export default function ValueSelectorRow(props:VSProps):JSX.Element {
-    const { title = '', clickHandler = () => {}, children = null, selectedIndex = 0 } = props;
+    const { title, clickHandler = () => {}, children = null, selectedIndex = 0 } = props;
 
     const selections = Children.map(children, (child:any, index) => {
         const proppedChild = cloneElement(child);
@@ -17,7 +17,7 @@ export default function ValueSelectorRow(props:VSProps):JSX.Element {
         return (<div
             key={index}
             onClick={()=> clickHandler(index)}
-            className={`${selected ? 'border-green' : 'border-white'} border-8 rounded-md p-2`}
+            className={`${selected ? 'border-green' : 'border-white border-opacity-25'} border-8 rounded-md p-2 flex-auto`}
         >
             {proppedChild}
         </div>);
@@ -26,7 +26,7 @@ export default function ValueSelectorRow(props:VSProps):JSX.Element {
     return (
     <>
        {title && <h3 className="cyberpunk">{title}</h3>}
-        <div className="flex flex-row justify-between items-center gap-2 p-4">
+        <div className="flex flex-row justify-between items-center gap-2 p-4 overflow-x-auto">
             {selections}      
         </div>
     </>
