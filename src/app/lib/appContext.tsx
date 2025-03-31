@@ -20,6 +20,9 @@ import { unset } from 'lodash';
 const appSchema = {
   user: {
     uid: null,
+    meta: {},
+    created_at: null,
+    updated_at: null,
   },
   logs: []
 }

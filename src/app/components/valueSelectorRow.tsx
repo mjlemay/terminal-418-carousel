@@ -17,7 +17,7 @@ export default function ValueSelectorRow(props:VSProps):JSX.Element {
         return (<div
             key={index}
             onClick={()=> clickHandler(index)}
-            className={`${selected ? 'border-green' : 'border-white border-opacity-25'} border-8 rounded-md p-2 flex-auto`}
+            className={`${selected ? 'border-green' : 'border-purple border-opacity-25'} border-8 rounded-md p-2 flex-auto`}
         >
             {proppedChild}
         </div>);

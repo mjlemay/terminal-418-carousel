@@ -9,9 +9,20 @@ export async function GET(req: Request, { params }: { params: Promise<{ userid: 
     const response = await db
         .select()
         .from(users)
-        .where(eq(users.user_id, userid));
-
-  return NextResponse.json(response);
+        .where(eq(users.user_id, userid)).limit(1);
+    if (response.length === 0) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+    const user = response[0];
+    const meta = user.meta ? JSON.parse(user.meta) : null; // Parse the "meta" field if it exists
+    const userData = {
+        user_id: user.user_id,
+        meta: meta,
+        created_at: user.created_at,
+        updated_at: user.updated_at,
+    };
+    // Return the user data with the parsed "meta" field
+    return NextResponse.json(userData);
 }
 
 export async function POST(req: Request, { params }: { params: Promise<{ userid: string }> }) {
@@ -23,3 +34,31 @@ export async function POST(req: Request, { params }: { params: Promise<{ userid:
   
     return NextResponse.json(response);
   }
+
+export async function PUT(req: Request, { params }: { params: Promise<{ userid: string }> }) {
+  const userid = (await params).userid;
+  const body = await req.json();
+  const meta = body.meta; // Extract "meta" from the request body
+
+  // Check if "meta" is a valid JSON object
+  let parsedMeta;
+  try {
+    parsedMeta = JSON.parse(meta);
+  } catch (error) {
+    return NextResponse.json({ error: 'Invalid meta value. It must be a valid JSON string.' }, { status: 400 });
+  }
+
+  if (typeof parsedMeta !== 'object' || parsedMeta === null) {
+    return NextResponse.json({ error: 'Invalid meta value. It must be a JSON object.' }, { status: 400 });
+  }
+
+  let user = { 
+    user_id: userid,
+  }
+  const response = await db
+  .update(users)
+  .set({ meta }) // Update the "meta" field
+  .where(eq(users.user_id, userid));
+
+  return NextResponse.json(response);
+}

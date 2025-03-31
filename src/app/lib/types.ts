@@ -1,6 +1,9 @@
 
 export type User = {
     uid: string | null,
+    meta: Record<string,string> | null,
+    created_at: string | null,
+    updated_at: string | null,
     }
 
 export type UserStore = {

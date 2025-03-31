@@ -1,0 +1,1 @@
+export const allianceArray = ["Endline Solutions", "Helix Industries", "Reboot Syndicate"];

@@ -14,6 +14,16 @@ export const users = pgTable('users', {
   user_id: text().notNull(),
 	meta: text(),
   created_at: timestamp().defaultNow(),
+  updated_at: timestamp().defaultNow(),
+});
+
+export const userMeta = pgTable('userGameMeta', {
+  id: serial('id').primaryKey(),
+  user_id: text().notNull(),
+  game: text(),
+  meta: text(),
+  created_at: timestamp().defaultNow(),
+  updated_at: timestamp().defaultNow(),
 });
 
 export const vinhGame = pgTable('vinhGame', {

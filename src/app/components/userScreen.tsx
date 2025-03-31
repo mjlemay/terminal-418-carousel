@@ -11,16 +11,44 @@ import Endline from '../svgs/endline';
 import Helix from '../svgs/helix';
 import Reboot from '../svgs/reboot';
 import FourEighteenCollective from '../svgs/418collective';
+import { allianceArray } from '../lib/constants';
 
 export default function UserScreen(): JSX.Element {
-    const { state, unSetUser = () => { } }: AppProviderValues = useContext(Context);
+    const { 
+        state,
+        unSetUser = () => {},
+        getUser = () => {},
+    }: AppProviderValues = useContext(Context);
     const { user, logs } = state;
     const uid: string | null = user ? user.uid : 'error';
     const logCount = logs ? logs.length : 0;
     const userLogCount = logs ? logs.filter((log) => log.scan_id === uid).length : 0;
     const [activity, setActivity] = useState('pip');
-    const [selector, setSelector] = useState(-1);
+    const userMeta = user ? user.meta : null;
+    const alliance = userMeta ? userMeta.alliance : null;
+    const allianceIndex = alliance ? allianceArray.indexOf(alliance) : -1;
+    const [selector, setSelector] = useState(allianceIndex);
 
+    const updateUserAlliance = async (allianceIndex: number) => {
+        setSelector(allianceIndex);
+        const alliance = allianceArray[allianceIndex];
+        const meta = JSON.stringify({ alliance });
+        const response = await fetch(`/api/user/${uid}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ meta }),
+        });
+        const data = await response.json();
+        if (response.ok) {
+            console.log('Alliance updated successfully:', data);
+            getUser(uid as string);
+        }
+        else {  
+            console.error('Error updating alliance:', data);
+        }
+    }
 
     const activityPane = (activityName: string) => {
         const activities:Record<string, JSX.Element> = {
@@ -39,7 +67,7 @@ export default function UserScreen(): JSX.Element {
                     {selector == 1 && <Helix width="100%" />}
                     {selector == 2 && <Reboot width="100%" />}
                 </div>
-                <ValueSelectorRow selectedIndex={selector} clickHandler={(num) => setSelector(num)}>
+                <ValueSelectorRow selectedIndex={selector} clickHandler={(num) => updateUserAlliance(num)}>
                     <span><Endline width="100%" /></span>
                     <span><Helix width="100%" /></span>
                     <span><Reboot width="100%" /></span>
@@ -65,6 +93,15 @@ export default function UserScreen(): JSX.Element {
                             <p className="cyberpunk m-4">
                                 AI SERIAL: {uid || 'ERR!'}
                             </p>
+                            <div className="m-4 flex items-center whitespace-nowrap flex-row">
+                                <div className="grow p-4">Sponsored by</div>
+                                <div>
+                                    {allianceIndex == -1 && <FourEighteenCollective />}
+                                    {allianceIndex == 0 && <Endline />}
+                                    {allianceIndex == 1 && <Helix />}
+                                    {allianceIndex == 2 && <Reboot />}
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <h3 className="cyberpunk">ACTIONS</h3>
