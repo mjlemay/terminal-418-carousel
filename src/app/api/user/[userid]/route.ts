@@ -10,17 +10,18 @@ export async function GET(req: Request, { params }: { params: Promise<{ userid: 
         .select()
         .from(users)
         .where(eq(users.user_id, userid)).limit(1);
-    if (response.length === 0) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
     const user = response[0];
-    const meta = user.meta ? JSON.parse(user.meta) : null; // Parse the "meta" field if it exists
-    const userData = {
+    const meta = user && user.meta ? JSON.parse(user.meta) : null; // Parse the "meta" field if it exists
+    console.log('user', JSON.stringify(user));
+    let userData = {};
+    if (user) {
+      userData = {
         user_id: user.user_id,
         meta: meta,
         created_at: user.created_at,
         updated_at: user.updated_at,
-    };
+      };
+    }
     // Return the user data with the parsed "meta" field
     return NextResponse.json(userData);
 }

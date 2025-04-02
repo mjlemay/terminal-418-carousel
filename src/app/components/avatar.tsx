@@ -4,7 +4,7 @@ import { createAvatar, schema } from '@dicebear/core';
 import { rings } from '@dicebear/collection';
 
 interface AvatarProps {
-    seed?: string;
+    seed?: string | null;
     size?: number;
     style?: any;
 }
@@ -12,6 +12,7 @@ interface AvatarProps {
 export default function Avatar(props:AvatarProps):JSX.Element {
   const { seed = 'me', size = 100} = props;
   const cleanString = seed+'';
+  const hasSeed = cleanString.length > 1 && seed !== null;
 
   const avatar = useMemo(() => {
     const options: any = {
@@ -24,8 +25,8 @@ export default function Avatar(props:AvatarProps):JSX.Element {
   }, [seed, size]);
 
   return (
-    <div className="avatar opacity-95 bg-blue-500 rounded-full shadow-lg shadow-blue-500/50 animate-pulse">
-        <Image className="saturate-200 animate-spin-slow" src={avatar} width={size} height={size} alt="Avatar" />
+    <div className={`avatar opacity-95 bg-blue-500 rounded-full shadow-lg shadow-blue-500/50 ${hasSeed ? 'animate-pulse' : 'grayscale-[100%]'}`}>
+        <Image className={`saturate-200 ${hasSeed && 'animate-spin-slow'}`} src={avatar} width={size} height={size} alt="Avatar" />
     </div>
     );
 };

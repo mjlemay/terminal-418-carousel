@@ -1,6 +1,4 @@
-import LuckyCat from '../svgs/luckycat';
 import BadgeScan from '../svgs/badgeScan';
-import Avatar from './avatar';
 import ActionButton from './actionButton';
 import { AppProviderValues } from '../lib/types';
 import { useContext, useState } from 'react';
@@ -12,6 +10,7 @@ import Helix from '../svgs/helix';
 import Reboot from '../svgs/reboot';
 import FourEighteenCollective from '../svgs/418collective';
 import { allianceArray } from '../lib/constants';
+import FactoryFloorGame from './factoryFloorGame';
 
 export default function UserScreen(): JSX.Element {
     const { 
@@ -55,7 +54,10 @@ export default function UserScreen(): JSX.Element {
             pip: <>
                 <h2 className="cyberpunk mb-4">PERFORMANCE IMPROVEMENT PLAN</h2>
                 <div className="p-4">
-                    <StateBlockRow icon={<LuckyCat />} title="LUCKYCAT STANDING" value={5} goal={10} />
+                    <h3 className="cyberpunk mb-4">FOUNDRY POWER ACTIVATION</h3>
+                    <div className='max-h-[450px] overflow-hidden'>
+                        <FactoryFloorGame />
+                    </div>
                     <StateBlockRow icon={<BadgeScan />} title="TECHNICIAN SCANS" value={userLogCount} goal={logCount} />
                 </div>
             </>,
@@ -80,30 +82,11 @@ export default function UserScreen(): JSX.Element {
 
     return (
         <section className="border-none flex h-full flex-col items-center justify-center p-4 pt-8 relative">
-            <div className="flex flex-row min-w-full p-4 gap-8">
-                <div className="basis-1/2 min-h-full">
+            <div className="flex flex-grow min-w-full p-4 gap-8">
+                <div className="grow min-h-full">
                     {activityPane(activity)}
                 </div>
-                <div className="basis-1/2 min-h-full">
-                    <div className='flex flex-row justify-between'>
-                        <div className="basis-1/3 pb-4">
-                            <Avatar seed={uid || 'error'} size={250} />
-                        </div>
-                        <div className="basis-2/3">
-                            <p className="cyberpunk m-4">
-                                AI SERIAL: {uid || 'ERR!'}
-                            </p>
-                            <div className="m-4 flex items-center whitespace-nowrap flex-row">
-                                <div className="grow p-4">Sponsored by</div>
-                                <div>
-                                    {allianceIndex == -1 && <FourEighteenCollective />}
-                                    {allianceIndex == 0 && <Endline />}
-                                    {allianceIndex == 1 && <Helix />}
-                                    {allianceIndex == 2 && <Reboot />}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div className="basis-64 min-h-full">
                     <h3 className="cyberpunk">ACTIONS</h3>
                     <div className="flex flex-row m-4 gap-4">
                         <ActionButton selected={activity === 'pip'} handleClick={() => setActivity('pip')}>PERFORMANCE IMPROVEMENT</ActionButton>

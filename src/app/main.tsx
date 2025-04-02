@@ -7,9 +7,8 @@ import {
 } from "./lib/types"; 
 import BgVideo from "./components/bgVideo";
 import Carousel from "./components/carousel";
-import Charts from "./components/charts";
+import ScanSlide from "./components/scanSlide";
 import Game from "./components/game";
-import Recents from "./components/recents";
 import Summary from "./components/summary";
 import TouchPulse from "./components/touchPulse";
 import Watermark from "./components/watermark";
@@ -97,9 +96,8 @@ export default function Main () {
         </Watermark>
         <Carousel>
             <Summary />
-            <Charts />
+            <ScanSlide />
             <Game />
-            <Recents />
         </Carousel>
         <TouchPulse />
         </main>
