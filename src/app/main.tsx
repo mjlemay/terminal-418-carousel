@@ -59,33 +59,39 @@ export default function Main () {
     },[rifdNumber]);
 
     useEffect(() => {
-      const ws = new WebSocket('ws://localhost:3000/api/nfc');
+      if (rifdNumber.length >= 4) {
+          console.log('rifdNumber', rifdNumber);
+      }
+    },[rifdNumber]);
+
+    // useEffect(() => {
+    //   const ws = new WebSocket('ws://localhost:3000/api/nfc');
   
-      ws.onopen = () => {
-        console.log('WebSocket connection opened');
-        setError(null); // Clear any previous errors
-      };
+    //   ws.onopen = () => {
+    //     console.log('WebSocket connection opened');
+    //     setError(null); // Clear any previous errors
+    //   };
   
-      ws.onmessage = (event) => {
-        const data: NfcData = JSON.parse(event.data);
-        setNfcData(data);
-        console.log('message data', data)
-      };
+    //   ws.onmessage = (event) => {
+    //     const data: NfcData = JSON.parse(event.data);
+    //     setNfcData(data);
+    //     console.log('message data', data)
+    //   };
   
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        setError('Failed to connect to the WebSocket server.');
-      };
+    //   ws.onerror = (error) => {
+    //     console.error('WebSocket error:', error);
+    //     setError('Failed to connect to the WebSocket server.');
+    //   };
   
-      ws.onclose = () => {
-        console.log('WebSocket connection closed');
-        setError('WebSocket connection closed.');
-      };
+    //   ws.onclose = () => {
+    //     console.log('WebSocket connection closed');
+    //     setError('WebSocket connection closed.');
+    //   };
   
-      return () => {
-        ws.close();
-      };
-    }, []);
+    //   return () => {
+    //     ws.close();
+    //   };
+    // }, []);
     
 
     return (

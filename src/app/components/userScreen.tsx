@@ -10,7 +10,6 @@ import Helix from '../svgs/helix';
 import Reboot from '../svgs/reboot';
 import FourEighteenCollective from '../svgs/418collective';
 import { allianceArray } from '../lib/constants';
-import FactoryFloorGame from './factoryFloorGame';
 
 export default function UserScreen(): JSX.Element {
     const { 
@@ -55,9 +54,7 @@ export default function UserScreen(): JSX.Element {
                 <h2 className="cyberpunk mb-4">PERFORMANCE IMPROVEMENT PLAN</h2>
                 <div className="p-4">
                     <h3 className="cyberpunk mb-4">FOUNDRY POWER ACTIVATION</h3>
-                    <div className='max-h-[450px] overflow-hidden'>
-                        <FactoryFloorGame />
-                    </div>
+                    power: 1
                     <StateBlockRow icon={<BadgeScan />} title="TECHNICIAN SCANS" value={userLogCount} goal={logCount} />
                 </div>
             </>,

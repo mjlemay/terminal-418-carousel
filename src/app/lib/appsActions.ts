@@ -21,12 +21,9 @@ export const getUser = (dispatch: DispatchFunc) => async (scanId: string | null)
     const defaultUser = {
         uid: scanId
     }
-    console.log("THIS IS A BIG CONSOLE LOG TO SHOW IF THIS CODE HITS");
     const data = await requestData(`/api/user/${scanId}`);
     
-    console.log('requestData', data);
     if (data && Object.keys(data).length === 0) {
-        console.log('no user found so creating a user')
         dispatch({
             type: 'GET_USER',
             payload: defaultUser,

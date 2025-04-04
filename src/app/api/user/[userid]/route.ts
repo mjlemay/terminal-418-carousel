@@ -12,7 +12,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ userid: 
         .where(eq(users.user_id, userid)).limit(1);
     const user = response[0];
     const meta = user && user.meta ? JSON.parse(user.meta) : null; // Parse the "meta" field if it exists
-    console.log('user', JSON.stringify(user));
     let userData = {};
     if (user) {
       userData = {

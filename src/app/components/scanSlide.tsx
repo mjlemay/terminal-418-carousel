@@ -48,7 +48,7 @@ export default function ScanSlide(): JSX.Element {
           }
           topTenUsers.sort((a:any, b:any) => parseFloat(b.value) - parseFloat(a.value));
           if (topTenUsers && topTenUsers.length >= 11) {
-            topTenUsers = topTenUsers.slice(0, 25);
+            topTenUsers = topTenUsers.slice(0, 20);
           }
           return topTenUsers;
         }
@@ -128,9 +128,9 @@ export default function ScanSlide(): JSX.Element {
 
     return (
         <section className="cyberpunk border-none flex h-full flex-col items-center justify-center">
-            <div className="w-full h-full p-4">
+            <div className="w-full h-full pb-4">
             <h2 className="cyberpunk">Daily Scans</h2>
-            <ResponsiveContainer width="100%" height={300} className="pt-4">
+            <ResponsiveContainer width="100%" height="47%" className="pt-4">
                 <ComposedChart data={lastFiveDays()}>
                     <XAxis dataKey="day" stroke="#00e6df" />
                     <YAxis stroke="#00e6df" />
@@ -141,8 +141,8 @@ export default function ScanSlide(): JSX.Element {
                 </ComposedChart>
             </ResponsiveContainer>
             <h2 className="cyberpunk">Top Technicians</h2>
-            <ResponsiveContainer width="100%" height={300} className="pt-4">
-                <BarChart data={data}>
+            <ResponsiveContainer width="100%" height="47%" className="pt-4">
+                <BarChart data={data} margin={{top: 20, bottom:20}}>
                     <Label value={renderCustomizedLabel as unknown as string} offset={0} position="insideBottom" />
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" interval={0} height={50} tick={renderCustomizedLabel}></XAxis>

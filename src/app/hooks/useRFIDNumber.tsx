@@ -3,8 +3,7 @@ import { useState, useCallback, useEffect } from "react";
 const WAIT = 300;
 const CPS_MIN = 3;
 const CPS_MAX = 30;
-const ID_LENGTH = 8;
-
+const ID_LENGTH = parseInt(process.env.NEXT_PUBLIC_ID_LENGTH || '8', 10); 
 export function useRFIDNumber(enabled:boolean) {
     const [ codeString, setCodeString ] = useState('');
     const [ rfidCode, setRfidCode ] = useState('');
@@ -36,6 +35,7 @@ export function useRFIDNumber(enabled:boolean) {
         ) {
             setCodeString(''); // resets reader if cps is inconsistent
         }
+        console.log('ID_LENGTH', ID_LENGTH);
         // clear values if rfid value or has reach id length
         if (
             (
