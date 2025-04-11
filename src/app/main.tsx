@@ -1,5 +1,5 @@
 
-import { useCallback, useContext, useEffect, useState } from "react";
+import { use, useCallback, useContext, useEffect, useState } from "react";
 import { useRFIDNumber } from './hooks/useRFIDNumber';
 import { Context } from "./lib/appContext";
 import {
@@ -13,6 +13,11 @@ import Summary from "./components/summary";
 import TouchPulse from "./components/touchPulse";
 import Watermark from "./components/watermark";
 import Terminal418 from "./svgs/terminal418";
+import Drawer  from "./components/drawer";
+import UserDrawer from "./components/userDrawer";
+import { userAgent } from "next/server";
+import { set } from "lodash";
+import { constrainedMemory } from "process";
 
 
 interface NfcData {
@@ -24,19 +29,36 @@ const  READ_WAIT = 20000;
 
 export default function Main () {
       const { 
+        state,
         createLog = () => {},
         getUser = () => {},
         getLogs = () => {},
+        unSetUser = () => {},
       }: AppProviderValues = useContext(Context);
       const [loading, setLoading] = useState(true);
       const [readReady, setReadReady] = useState(true);
       const [nfcData, setNfcData] = useState<NfcData | null>(null);
       const [error, setError] = useState<string | null>(null);
+      const [drawerOpen, setDrawerOpen] = useState(false);
       const rifdNumber = useRFIDNumber(readReady);
       const initData = useCallback(() => {
         getLogs();
       }, [getUser]);
-    
+      const { user } = state;
+      const userId = user ? user.uid : null;
+   
+      const closeUserDrawer = () => {
+        console.log('closeUserDrawer');
+        setDrawerOpen(false);
+        unSetUser();
+      }
+
+      useEffect(() => {
+          if (userId && !drawerOpen){
+              setDrawerOpen(true);
+          }
+      }, [userId, drawerOpen]);
+
       useEffect(() => {
         if (loading) {
           console.log('loading...');
@@ -95,17 +117,22 @@ export default function Main () {
     
 
     return (
-        <main>
-        <BgVideo video="video/wave.mp4" />
-        <Watermark>
-            <Terminal418 />
-        </Watermark>
-        <Carousel>
-            <Summary />
-            <ScanSlide />
-            <Game />
-        </Carousel>
-        <TouchPulse />
+      <>
+        <main className="overflow-hidden">
+          <BgVideo video="video/wave.mp4" />
+          <Watermark>
+              <Terminal418 />
+          </Watermark>
+          <Carousel>
+              <Summary />
+              <ScanSlide />
+              <Game />
+          </Carousel>
+          <TouchPulse />
         </main>
+        <Drawer isOpen={drawerOpen} onClose={() => closeUserDrawer()}>
+          <UserDrawer />
+        </Drawer>
+      </>
     ); 
 }

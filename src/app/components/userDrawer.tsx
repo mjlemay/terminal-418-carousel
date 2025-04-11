@@ -11,11 +11,11 @@ import Reboot from '../svgs/reboot';
 import FourEighteenCollective from '../svgs/418collective';
 import { allianceArray } from '../lib/constants';
 
-export default function UserScreen(): JSX.Element {
-    const { 
+export default function UserDrawer(): JSX.Element {
+    const {
         state,
-        unSetUser = () => {},
-        getUser = () => {},
+        unSetUser = () => { },
+        getUser = () => { },
     }: AppProviderValues = useContext(Context);
     const { user, logs } = state;
     const uid: string | null = user ? user.uid : 'error';
@@ -43,20 +43,16 @@ export default function UserScreen(): JSX.Element {
             console.log('Alliance updated successfully:', data);
             getUser(uid as string);
         }
-        else {  
+        else {
             console.error('Error updating alliance:', data);
         }
     }
 
     const activityPane = (activityName: string) => {
-        const activities:Record<string, JSX.Element> = {
+        const activities: Record<string, JSX.Element> = {
             pip: <>
-                <h2 className="cyberpunk mb-4">PERFORMANCE IMPROVEMENT PLAN</h2>
-                <div className="p-4">
-                    <h3 className="cyberpunk mb-4">FOUNDRY POWER ACTIVATION</h3>
-                    power: 1
-                    <StateBlockRow icon={<BadgeScan />} title="TECHNICIAN SCANS" value={userLogCount} goal={logCount} />
-                </div>
+                <StateBlockRow icon={<BadgeScan />} title="TECHNICIAN SCANS" value={userLogCount} goal={logCount} />
+                <StateBlockRow icon={<BadgeScan />} title="CHARGES AVAILABLE" value={userLogCount} goal={logCount} />
             </>,
             config: <>
                 <h2 className="cyberpunk mb-4">SELECT SPONSOR</h2>
@@ -74,24 +70,18 @@ export default function UserScreen(): JSX.Element {
             </>,
         }
 
-        return activities[activityName] || null; 
+        return activities[activityName] || null;
     }
 
     return (
-        <section className="border-none flex h-full flex-col items-center justify-center p-4 pt-8 relative">
-            <div className="flex flex-grow min-w-full p-4 gap-8">
-                <div className="grow min-h-full">
-                    {activityPane(activity)}
-                </div>
-                <div className="basis-64 min-h-full">
-                    <h3 className="cyberpunk">ACTIONS</h3>
-                    <div className="flex flex-row m-4 gap-4">
-                        <ActionButton selected={activity === 'pip'} handleClick={() => setActivity('pip')}>PERFORMANCE IMPROVEMENT</ActionButton>
-                        <ActionButton selected={activity === 'config'} handleClick={() => setActivity('config')}>SELECT SPONSOR</ActionButton>
-                        <ActionButton handleClick={() => unSetUser()}>TERMINATE CONNECTION</ActionButton>
-                    </div>
+        <div className="border-none flex h-full flex-col items-center justify-center p-4 pt-8 relative">
+            <div className="min-h-full">
+                {activityPane(activity)}
+                <div className="flex flex-row m-4 gap-4">
+                    <ActionButton selected={activity === 'pip'} handleClick={() => setActivity('pip')}>PERFORMANCE IMPROVEMENT</ActionButton>
+                    <ActionButton selected={activity === 'config'} handleClick={() => setActivity('config')}>SELECT SPONSOR</ActionButton>
                 </div>
             </div>
-        </section>
+        </div>
     )
 }

@@ -1,74 +1,208 @@
 import React, { useEffect, useRef } from 'react';
-import { Engine, Scene, ArcRotateCamera, HemisphericLight, Vector3, MeshBuilder, StandardMaterial, Color3, Mesh } from '@babylonjs/core';
+import {
+  Engine,
+  Scene,
+  AbstractMesh,
+  ArcRotateCamera,
+  DefaultRenderingPipeline,
+  HemisphericLight,
+  Vector3,
+  Color4,
+  AssetsManager,
+  MeshAssetTask,
+  DirectionalLight,
+  Color3,
+  TransformNode,
+  AxesViewer
+} from '@babylonjs/core';
+import "@babylonjs/loaders/glTF";
+
+const GRID_SIZE = 25;
+const tiles = {
+  'wall_north': {
+    meshPrefix: 'Mesh2_',
+  },
+  'glow_square': {
+    meshPrefix: 'Mesh17',
+  },
+  'solid_square': {
+    meshPrefix: 'Mesh27',
+  },
+  'default_square': {
+    meshPrefix: 'Mesh19',
+  },
+  'vent_square': {
+    meshPrefix: 'Mesh11',
+  },
+  'octogon_square': {
+    meshPrefix: 'Mesh',
+  },
+}
 
 const FactoryFloorGame = () => {
   const canvasRef = useRef(null);
-  const stonesRef = useRef<{ mesh: Mesh; x: number; z: number; player: string }[]>([]); // Track stones
-  const currentPlayerRef = useRef('black'); // Black starts first
 
-  useEffect(() => {
-    if (!canvasRef.current) return;
+  const initializeScene = () => {
 
     // Initialize Babylon.js
     const engine = new Engine(canvasRef.current, true);
     const scene = new Scene(engine);
+    scene.clearColor = new Color4(0.1, 0.1, 0.15, 0.25);
     const camera = new ArcRotateCamera(
-      "camera", -Math.PI / 2, Math.PI / 3, 15, Vector3.Zero(), scene
+      "atmosphericCam",
+      -Math.PI / 2.5,  // More dynamic angle
+      Math.PI / 3.5,   // 60° downward tilt
+      150,             // Closer for intimacy
+      Vector3.Zero(),
+      scene
     );
+    camera.fov = 0.8;                          // Narrower FOV for drama
+    camera.lowerRadiusLimit = 50;               // Prevent clipping
+    camera.upperRadiusLimit = 500;              // Max zoom out
+    camera.inertia = 0.85;                     // Smooth movements
     camera.attachControl(canvasRef.current, true);
-    new HemisphericLight("light", new Vector3(0, 1, 0), scene);
+    const envLight = new HemisphericLight("envLight", new Vector3(0, 1, 0), scene);
+    envLight.intensity = 0.1;
+    envLight.groundColor = new Color3(0.3, 0.3, 0.4); // Cool shadows
+    const sunLight = new DirectionalLight("sunLight", new Vector3(-1, -2, -1), scene);
+    sunLight.intensity = 0.25;
+    sunLight.shadowEnabled = true; // Optional dynamic shadows
 
-    // Create Go Board
-    const createBoard = () => {
-      const board = MeshBuilder.CreateGround("board", { width: 19, height: 19 }, scene);
-      board.material = new StandardMaterial("boardMat", scene);
-      (board.material as StandardMaterial).diffuseColor = new Color3(0.8, 0.7, 0.5); // Wooden color
+    const pipeline = new DefaultRenderingPipeline(
+      "moodPipeline",
+      true, // HDR
+      scene,
+      [camera]
+    );
+    pipeline.bloomEnabled = true;
+    pipeline.bloomThreshold = 0.7;
+    pipeline.bloomWeight = 0.3;
 
-      // Grid lines
-      for (let i = 0; i < 19; i++) {
-        MeshBuilder.CreateLines("lineX", {
-          points: [new Vector3(-9, 0, i - 9), new Vector3(9, 0, i - 9)]
-        }, scene);
-        MeshBuilder.CreateLines("lineZ", {
-          points: [new Vector3(i - 9, 0, -9), new Vector3(i - 9, 0, 9)]
-        }, scene);
+
+    // Create factor floor Function
+
+    const createFloor = (task: MeshAssetTask) => {
+      // Hide all original meshes
+      task.loadedMeshes.forEach(mesh => {
+        mesh.isVisible = false;
+        mesh.setEnabled(false);
+      });
+
+      // Create a map of tile types to their meshes (now arrays)
+      const tileMeshes: Record<string, AbstractMesh[]> = {};
+
+      Object.entries(tiles).forEach(([tileName, tileDef]) => {
+        tileMeshes[tileName] = task.loadedMeshes.filter(mesh =>
+          mesh.name.includes(tileDef.meshPrefix)
+        );
+      });
+
+      // ✨ NEW: Visible mesh centering function
+      const getVisibleBoundingCenter = (mesh: AbstractMesh): Vector3 => {
+        const allMeshes = [mesh, ...mesh.getChildMeshes()].filter(m => m.isVisible);
+        if (allMeshes.length === 0) return Vector3.Zero();
+      
+        let min = new Vector3(Infinity, Infinity, Infinity);
+        let max = new Vector3(-Infinity, -Infinity, -Infinity);
+      
+        allMeshes.forEach(m => {
+          const boundingInfo = m.getBoundingInfo();
+          // ✅ Correct method names:
+          min = Vector3.Minimize(min, boundingInfo.boundingBox.minimum);
+          max = Vector3.Maximize(max, boundingInfo.boundingBox.maximum);
+        });
+      
+        return Vector3.Lerp(min, max, 0.5);
+      };
+
+      // Grid setup
+      const TILE_SIZE = 40;
+      const halfGrid = GRID_SIZE / 2;
+      const TILE_GAP = 0.025;
+
+      for (let x = 0; x < GRID_SIZE; x++) {
+        for (let z = 0; z < GRID_SIZE; z++) {
+          // Create parent node for this tile
+          const xPos = (x - halfGrid) * (TILE_SIZE + TILE_GAP);
+          const zPos = (z - halfGrid) * (TILE_SIZE + TILE_GAP);
+          const tileGroup = new TransformNode(`tile_group_${x}_${z}`, scene);
+          tileGroup.position = new Vector3(
+            xPos,
+            0,
+            zPos
+          );
+
+          // Determine which tile type to use
+          const getTileType = (x:number, z:number) => {
+            return (x + z) % 2 === 0 ? 'solid_square' : 'glow_square';
+          }
+          const tileType = getTileType(x, z);
+          const sourceMeshes = tileMeshes[tileType];
+
+          // Clone all meshes for this tile type
+          sourceMeshes.forEach((sourceMesh, index) => {
+            const tileClone = sourceMesh.clone(`tile_${tileType}_${index}_${x}_${z}`, null);
+            if (tileClone) {
+              // Reset transforms
+              tileClone.isVisible = true;
+              tileClone.position = Vector3.Zero();
+              tileClone.rotation = Vector3.Zero();
+              tileClone.scaling = Vector3.One();
+
+              // 🔥 NEW: Center based on VISIBLE geometry only
+              const visibleCenter = getVisibleBoundingCenter(tileClone);
+              tileClone.position.subtractInPlace(visibleCenter);
+
+              tileClone.parent = tileGroup;
+              tileClone.setEnabled(true);
+              
+              // Remove vent_square special case - no longer needed
+              // as getVisibleBoundingCenter handles all cases
+            }
+          });
+        }
       }
     };
-    createBoard();
 
-    // Handle stone placement
-    scene.onPointerDown = (_, pickResult) => {
-      if (pickResult.hit) {
-        if (!pickResult.pickedPoint) return;
-        const { x, z } = pickResult.pickedPoint;
-        const gridX = Math.round(x);
-        const gridZ = Math.round(z);
 
-        // Check if position is empty
-        const existingStone = stonesRef.current.find(s => s.x === gridX && s.z === gridZ);
-        if (existingStone) return;
 
-        // Create stone
-        const stone = MeshBuilder.CreateSphere("stone", { diameter: 0.9 }, scene);
-        stone.position.set(gridX, 0.5, gridZ);
-        stone.material = new StandardMaterial("stoneMat", scene);
-        (stone.material as StandardMaterial).diffuseColor = currentPlayerRef.current === 'black' 
-          ? new Color3(0, 0, 0) 
-          : new Color3(1, 1, 1);
+    // 🌟 Modern AssetsManager approach
+    const assetsManager = new AssetsManager(scene);
+    const meshTask = assetsManager.addMeshTask(
+      "load-glb",
+      "",
+      "/glbs/",
+      "floor_tiles_parts.glb"
+    );
 
-        stonesRef.current.push({ mesh: stone, x: gridX, z: gridZ, player: currentPlayerRef.current });
-        currentPlayerRef.current = currentPlayerRef.current === 'black' ? 'white' : 'black';
-      }
+    meshTask.onSuccess = (task) => {
+      console.log("GLB loaded successfully");
+      createFloor(task);
     };
+
+    meshTask.onError = (task, message) => {
+      console.error("GLB load failed:", message);
+    };
+
+    assetsManager.load();
 
     // Render loop
     engine.runRenderLoop(() => scene.render());
 
     // Cleanup
     return () => engine.dispose();
+  }
+
+  useEffect(() => {
+    if (!canvasRef.current) {
+      return;
+    }
+    // Initialize the scene when the component mounts
+    initializeScene();
   }, []);
 
   return <canvas ref={canvasRef} style={{ width: '100%', height: '100vh' }} />;
 };
 
 export default FactoryFloorGame;
+

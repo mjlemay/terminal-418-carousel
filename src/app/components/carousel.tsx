@@ -198,7 +198,7 @@ export default function Carousel(props: CarouselProps): JSX.Element {
                     </div>
                     <div className="viewframe">
                         <AnimatePresence mode="wait">
-                            {isLoggedIn ? <UserScreen /> : panes}
+                            { panes }
                         </AnimatePresence>
                     </div>
                 </div>

@@ -50,6 +50,7 @@ body {
 .viewer {
   overflow: hidden;
 }
+
 .viewframe {
   position: relative;
 }
@@ -58,4 +59,11 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+
+html, body, #__next {
+  overflow-x: hidden;
+  position: relative;
+  height: 100%;
 }
