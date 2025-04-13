@@ -17,8 +17,7 @@ export default function Game():JSX.Element {
 
     return (
       <section className="cyberpunk border-none flex h-full flex-col items-center justify-center">
-          <h2 className="cyberpunk mb-2">Factory</h2>
-          <div className="absolute">
+          <div className="absolute p4">
             <FactoryFloorGame />
          </div>
       </section>
