@@ -12,17 +12,12 @@ import {
   DirectionalLight,
   Color3,
   TransformNode,
-  AxesViewer,
-  ExecuteCodeAction,
   StandardMaterial,
   MeshBuilder,
   HighlightLayer,
-  ActionManager,
-  InstancedMesh,
   Mesh,
 } from '@babylonjs/core';
 import "@babylonjs/loaders/glTF";
-import { SphereBuilder } from '@babylonjs/core/Meshes/Builders/sphereBuilder';
 
 
 // Grid setup
@@ -106,14 +101,12 @@ const FactoryFloorGame = () => {
       Vector3.Zero(),
       scene
     );
-    
+
     // Lock camera controls
-    camera.lowerRadiusLimit = camera.upperRadiusLimit = 300; // Fixed distance
+    camera.lowerRadiusLimit = camera.upperRadiusLimit = 400; // Fixed distance
     camera.lowerBetaLimit = Math.PI / 6; // Minimum vertical angle
     camera.upperBetaLimit = Math.PI / 3; // Maximum vertical angle
     camera.inputs.attached.mousewheel.detachControl();
-
-
 
     // Cinematic orthographic projection
     const zoomFactor = 1; // Twice as large (0.5 = 2x zoom)
@@ -121,6 +114,7 @@ const FactoryFloorGame = () => {
     camera.orthoBottom = (-GRID_SIZE * TILE_SIZE / 2) * zoomFactor;
     camera.orthoLeft = (-GRID_SIZE * TILE_SIZE / 4) * zoomFactor;
     camera.orthoRight = (GRID_SIZE * TILE_SIZE / 4) * zoomFactor;
+
 
     // Lighting
     const envLight = new HemisphericLight("envLight", new Vector3(0, 1, 0), scene);
@@ -131,28 +125,33 @@ const FactoryFloorGame = () => {
     sunLight.shadowEnabled = true; // Optional dynamic shadows
 
     // Existing player placeholder setup
-const createPlayer = (scene: Scene) => {
-  const container = new TransformNode("playerContainer", scene);
-  const placeholder = MeshBuilder.CreateSphere("player_placeholder", 
-    { diameter: 10 }, scene);
-  placeholder.isPickable = false;
-  placeholder.parent = container;
+    const createPlayer = (scene: Scene) => {
+      const container = new TransformNode("playerContainer", scene);
+      // Start the container at ground level (0)
+      container.position = new Vector3(0, 0, 0);
 
-  return {
-    container,
-    placeholder,
-    model: null as AbstractMesh | null // Will be replaced with loaded model
-  };
-};
+      const placeholder = MeshBuilder.CreateSphere("player_placeholder",
+        { diameter: 10 }, scene);
+      placeholder.isPickable = false;
+      // Position the placeholder 40 units above the container
+      placeholder.position = new Vector3(0, 40, 0);
+      placeholder.parent = container;
 
-const player = createPlayer(scene);
-camera.setTarget(player.container);
+      return {
+        container,
+        placeholder,
+        model: null as AbstractMesh | null
+      };
+    };
 
-const movePlayerTo = (target: Vector3) => {
-  const currentPlayer = player.model || player.placeholder;
-  const startPos = currentPlayer.getAbsolutePosition();
+    const player = createPlayer(scene);
+    camera.setTarget(player.container);
+    camera.lockedTarget = player.container;
+
+    const movePlayerTo = (target: Vector3) => {
       const duration = 1000;
       let startTime = Date.now();
+      const startPos = player.container.position.clone();
       
       const animate = () => {
         const elapsed = Date.now() - startTime;
@@ -162,9 +161,13 @@ const movePlayerTo = (target: Vector3) => {
           ? 4 * progress * progress * progress 
           : 1 - Math.pow(-2 * progress + 2, 3) / 2;
         
-          currentPlayer.position = Vector3.Lerp(startPos, target, easeProgress);
+        // Move only the X and Z coordinates, keeping Y at 0 (height handled by model position)
+        player.container.position = new Vector3(
+          startPos.x + (target.x - startPos.x) * easeProgress,
+          0, // Container stays at ground level
+          startPos.z + (target.z - startPos.z) * easeProgress
+        );
         
-        // Camera will automatically follow since it's attached to cameraTarget
         if (progress < 1) {
           requestAnimationFrame(animate);
         }
@@ -178,25 +181,25 @@ const movePlayerTo = (target: Vector3) => {
       highlightLayerRef.current?.removeAllMeshes();
       const meshes = tileGroup.getChildMeshes(true).filter(m => m.isEnabled() && m.isVisible);
       meshes.forEach(mesh => highlightLayerRef.current?.addMesh(mesh as Mesh, Color3.Yellow()));
-    
+
       // Calculate the true world-space center of all visible tile meshes
       let min = new Vector3(Infinity, Infinity, Infinity);
       let max = new Vector3(-Infinity, -Infinity, -Infinity);
-    
+
       meshes.forEach(mesh => {
         const boundingInfo = mesh.getBoundingInfo();
         const worldMin = Vector3.TransformCoordinates(boundingInfo.boundingBox.minimum, mesh.getWorldMatrix());
         const worldMax = Vector3.TransformCoordinates(boundingInfo.boundingBox.maximum, mesh.getWorldMatrix());
-        
+
         min = Vector3.Minimize(min, worldMin);
         max = Vector3.Maximize(max, worldMax);
       });
-    
-      const worldCenter = Vector3.Lerp(min, max, 0.5);    
+
+      const worldCenter = Vector3.Lerp(min, max, 0.5);
       // Move player to the calculated center
       movePlayerTo(new Vector3(
         worldCenter.x,
-        40, // Player height
+        0, // Player height
         worldCenter.z
       ));
     };
@@ -299,7 +302,7 @@ const movePlayerTo = (target: Vector3) => {
     // 🌟 Modern AssetsManager approach
     const assetsManager = new AssetsManager(scene);
     assetsManager.useDefaultLoadingScreen = false;
-    
+
     // Load floor tiles (existing)
     const floorTask = assetsManager.addMeshTask(
       "load-floor",
@@ -307,7 +310,7 @@ const movePlayerTo = (target: Vector3) => {
       "/models/", // Your models directory
       "floor_tiles_parts.glb"
     );
-    
+
     // NEW: Add player model loading task
     const playerTask = assetsManager.addMeshTask(
       "load-player",
@@ -329,30 +332,22 @@ const movePlayerTo = (target: Vector3) => {
     playerTask.onSuccess = (task) => {
       const rootMesh = task.loadedMeshes[0];
       if (rootMesh) {
-        // Hide placeholder
         player.placeholder.setEnabled(false);
-        
-        // Configure loaded model
-        rootMesh.name = "player_model";
         rootMesh.parent = player.container;
-        rootMesh.scaling = new Vector3(40, 40, 40); // Adjust scale as needed
+        // Position the model 40 units above the container
+        rootMesh.position = new Vector3(0, 40, 0);
+        rootMesh.scaling = new Vector3(40, 40, 40);
         
-        // Make all child meshes non-pickable too
         task.loadedMeshes.forEach(mesh => {
           mesh.isPickable = false;
         });
         
         player.model = rootMesh;
-        
-        // Position adjustments if needed
-        rootMesh.position = new Vector3(0, 40, 0);
-        rootMesh.rotation = Vector3.Zero();
       }
     };
-    
+
     playerTask.onError = (task, message) => {
       console.error("Player model failed to load:", message);
-      // Keep using the placeholder sphere
     };
 
     assetsManager.load();
