@@ -181,22 +181,25 @@ const FactoryFloorGame = () => {
       const meshes = tileGroup.getChildMeshes(true).filter(m => m.isEnabled() && m.isVisible);
       meshes.forEach(mesh => highlightLayerRef.current?.addMesh(mesh as Mesh, Color3.Yellow()));
     
-      // Calculate target position (center of tile)
-      const childMeshes = tileGroup.getChildMeshes(false);
-      let center = Vector3.Zero();
+      // Calculate the true world-space center of all visible tile meshes
+      let min = new Vector3(Infinity, Infinity, Infinity);
+      let max = new Vector3(-Infinity, -Infinity, -Infinity);
     
-      if (childMeshes.length > 0) {
-        childMeshes.forEach(mesh => {
-          center.addInPlace(mesh.getBoundingInfo().boundingBox.center);
-        });
-        center.scaleInPlace(1 / childMeshes.length);
-      }
+      meshes.forEach(mesh => {
+        const boundingInfo = mesh.getBoundingInfo();
+        const worldMin = Vector3.TransformCoordinates(boundingInfo.boundingBox.minimum, mesh.getWorldMatrix());
+        const worldMax = Vector3.TransformCoordinates(boundingInfo.boundingBox.maximum, mesh.getWorldMatrix());
+        
+        min = Vector3.Minimize(min, worldMin);
+        max = Vector3.Maximize(max, worldMax);
+      });
     
-      // Move player to tile (camera will follow automatically)
+      const worldCenter = Vector3.Lerp(min, max, 0.5);    
+      // Move player to the calculated center
       movePlayerTo(new Vector3(
-        center.x + tileGroup.position.x,
+        worldCenter.x,
         5, // Player height
-        center.z + tileGroup.position.z
+        worldCenter.z
       ));
     };
 
@@ -263,6 +266,8 @@ const FactoryFloorGame = () => {
               tileClone.position = Vector3.Zero();
               tileClone.rotation = Vector3.Zero();
               tileClone.scaling = Vector3.One();
+              tileClone.metadata.z = z;
+              tileClone.metadata.x = x;
               // center the tile
               const visibleCenter = getVisibleBoundingCenter(tileClone);
               tileClone.position.subtractInPlace(visibleCenter);
