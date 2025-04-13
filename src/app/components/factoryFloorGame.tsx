@@ -22,6 +22,7 @@ import {
   Mesh,
 } from '@babylonjs/core';
 import "@babylonjs/loaders/glTF";
+import { SphereBuilder } from '@babylonjs/core/Meshes/Builders/sphereBuilder';
 
 
 // Grid setup
@@ -61,7 +62,6 @@ Engine.DefaultLoadingScreenFactory = () => ({
 
 const FactoryFloorGame = () => {
   const canvasRef = useRef(null);
-  const selectedTileRef = useRef<TransformNode | null>(null);
   const highlightLayerRef = useRef<HighlightLayer | null>(null);
 
 
@@ -100,24 +100,27 @@ const FactoryFloorGame = () => {
     // camera controls
     const camera = new ArcRotateCamera(
       "industrialOverlordCam",
-      Math.PI / 8,            // 22.5° azimuth (subtle diagonal)
-      Math.PI / 6,            // 30° elevation (slight tilt)
-      200,                    // Increased distance
-      new Vector3(0, 10, 0),  // Target slightly elevated
+      Math.PI / 2, // Azimuth (side view)
+      Math.PI / 6, // Elevation (30 degree angle)
+      400, // Double the original distance (200 -> 400)
+      Vector3.Zero(),
       scene
     );
+    
+    // Lock camera controls
+    camera.lowerRadiusLimit = camera.upperRadiusLimit = 300; // Fixed distance
+    camera.lowerBetaLimit = Math.PI / 6; // Minimum vertical angle
+    camera.upperBetaLimit = Math.PI / 3; // Maximum vertical angle
+    camera.inputs.attached.mousewheel.detachControl();
 
-    // Gentle constraints (allows minimal thematic drift)
-    camera.lowerBetaLimit = camera.upperBetaLimit = Math.PI / 6; // Fixed tilt
-    camera.lowerAlphaLimit = camera.upperAlphaLimit = Math.PI / 8; // Fixed rotation
+
 
     // Cinematic orthographic projection
-    const zoomFactor = 0.5; // Twice as large (0.5 = 2x zoom)
-    camera.orthoTop = (GRID_SIZE * TILE_SIZE / 4) * zoomFactor;
-    camera.orthoBottom = (-GRID_SIZE * TILE_SIZE / 4) * zoomFactor;
+    const zoomFactor = 1; // Twice as large (0.5 = 2x zoom)
+    camera.orthoTop = (GRID_SIZE * TILE_SIZE / 2) * zoomFactor; // Double the area
+    camera.orthoBottom = (-GRID_SIZE * TILE_SIZE / 2) * zoomFactor;
     camera.orthoLeft = (-GRID_SIZE * TILE_SIZE / 4) * zoomFactor;
     camera.orthoRight = (GRID_SIZE * TILE_SIZE / 4) * zoomFactor;
-
 
     // Lighting
     const envLight = new HemisphericLight("envLight", new Vector3(0, 1, 0), scene);
@@ -127,38 +130,74 @@ const FactoryFloorGame = () => {
     sunLight.intensity = 0.25;
     sunLight.shadowEnabled = true; // Optional dynamic shadows
 
+    //create player token
+    const createPlayer = (scene: Scene) => {
+      const player = MeshBuilder.CreateSphere("player", { diameter: 10 }, scene);
+      player.position.y = 5;
+      
+      // Create a point slightly above the player for camera to look at
+      const cameraTarget = new TransformNode("cameraTarget", scene);
+      cameraTarget.parent = player;
+      cameraTarget.position = new Vector3(0, 15, 0); // Above the player
+      
+      const material = new StandardMaterial("playerMaterial", scene);
+      material.diffuseColor = new Color3(0, 0.5, 1);
+      player.material = material;
+      
+      return { player, cameraTarget };
+    };
+    
+    // Initialize player and get both objects
+    const { player, cameraTarget } = createPlayer(scene);
+    camera.setTarget(cameraTarget);
+
+    const movePlayerTo = (target: Vector3) => {
+      const startPos = player.position.clone();
+      const duration = 1000;
+      let startTime = Date.now();
+      
+      const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        const easeProgress = progress < 0.5 
+          ? 4 * progress * progress * progress 
+          : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+        
+        player.position = Vector3.Lerp(startPos, target, easeProgress);
+        
+        // Camera will automatically follow since it's attached to cameraTarget
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        }
+      };
+      
+      animate();
+    };
+
     const handleTileClick = (tileGroup: TransformNode) => {
-      // 1. Keep existing highlight code
+      // Highlight the tile
       highlightLayerRef.current?.removeAllMeshes();
       const meshes = tileGroup.getChildMeshes(true).filter(m => m.isEnabled() && m.isVisible);
       meshes.forEach(mesh => highlightLayerRef.current?.addMesh(mesh as Mesh, Color3.Yellow()));
     
-      // 2. Calculate target position (maintain camera height)
-      const targetPosition = new Vector3(
-        tileGroup.position.x, 
-        camera.target.y, // Keep original Y position
-        tileGroup.position.z
-      );
+      // Calculate target position (center of tile)
+      const childMeshes = tileGroup.getChildMeshes(false);
+      let center = Vector3.Zero();
     
-      // 3. Configure pan animation
-      const panDuration = 0.7; // seconds
-      let panProgress = 0;
-      const startPosition = camera.target.clone();
+      if (childMeshes.length > 0) {
+        childMeshes.forEach(mesh => {
+          center.addInPlace(mesh.getBoundingInfo().boundingBox.center);
+        });
+        center.scaleInPlace(1 / childMeshes.length);
+      }
     
-      // 4. Create smooth panning
-      const panObserver = scene.onBeforeRenderObservable.add(() => {
-        panProgress += engine.getDeltaTime() / (panDuration * 1000);
-        const t = Math.min(1, panProgress);
-        
-        // Cubic easing for smooth motion
-        const easeT = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-        
-        // Move directly toward target without rotation
-        camera.target = Vector3.Lerp(startPosition, targetPosition, easeT);
-        
-        // Clean up when complete
-        if (t >= 1) scene.onBeforeRenderObservable.remove(panObserver);
-      });
+      // Move player to tile (camera will follow automatically)
+      movePlayerTo(new Vector3(
+        center.x + tileGroup.position.x,
+        5, // Player height
+        center.z + tileGroup.position.z
+      ));
     };
 
     // Create factor floor Function
@@ -242,9 +281,15 @@ const FactoryFloorGame = () => {
     };
 
     scene.onPointerDown = (evt, pickInfo) => {
-      if (pickInfo.hit && pickInfo.pickedMesh?.name.startsWith("tile")) {
-        const tileGroup = pickInfo.pickedMesh.parent as TransformNode;
-        handleTileClick(tileGroup);
+      if (pickInfo.hit) {
+        let mesh = pickInfo.pickedMesh;
+        while (mesh && !mesh.name.startsWith("tile_group_")) {
+          mesh = mesh.parent as AbstractMesh;
+        }
+
+        if (mesh) {
+          handleTileClick(mesh as TransformNode);
+        }
       }
     };
 
