@@ -130,29 +130,27 @@ const FactoryFloorGame = () => {
     sunLight.intensity = 0.25;
     sunLight.shadowEnabled = true; // Optional dynamic shadows
 
-    //create player token
-    const createPlayer = (scene: Scene) => {
-      const player = MeshBuilder.CreateSphere("player", { diameter: 10 }, scene);
-      player.position.y = 5;
-      
-      // Create a point slightly above the player for camera to look at
-      const cameraTarget = new TransformNode("cameraTarget", scene);
-      cameraTarget.parent = player;
-      cameraTarget.position = new Vector3(0, 15, 0); // Above the player
-      
-      const material = new StandardMaterial("playerMaterial", scene);
-      material.diffuseColor = new Color3(0, 0.5, 1);
-      player.material = material;
-      
-      return { player, cameraTarget };
-    };
-    
-    // Initialize player and get both objects
-    const { player, cameraTarget } = createPlayer(scene);
-    camera.setTarget(cameraTarget);
+    // Existing player placeholder setup
+const createPlayer = (scene: Scene) => {
+  const container = new TransformNode("playerContainer", scene);
+  const placeholder = MeshBuilder.CreateSphere("player_placeholder", 
+    { diameter: 10 }, scene);
+  placeholder.isPickable = false;
+  placeholder.parent = container;
 
-    const movePlayerTo = (target: Vector3) => {
-      const startPos = player.position.clone();
+  return {
+    container,
+    placeholder,
+    model: null as AbstractMesh | null // Will be replaced with loaded model
+  };
+};
+
+const player = createPlayer(scene);
+camera.setTarget(player.container);
+
+const movePlayerTo = (target: Vector3) => {
+  const currentPlayer = player.model || player.placeholder;
+  const startPos = currentPlayer.getAbsolutePosition();
       const duration = 1000;
       let startTime = Date.now();
       
@@ -164,7 +162,7 @@ const FactoryFloorGame = () => {
           ? 4 * progress * progress * progress 
           : 1 - Math.pow(-2 * progress + 2, 3) / 2;
         
-        player.position = Vector3.Lerp(startPos, target, easeProgress);
+          currentPlayer.position = Vector3.Lerp(startPos, target, easeProgress);
         
         // Camera will automatically follow since it's attached to cameraTarget
         if (progress < 1) {
@@ -198,7 +196,7 @@ const FactoryFloorGame = () => {
       // Move player to the calculated center
       movePlayerTo(new Vector3(
         worldCenter.x,
-        5, // Player height
+        40, // Player height
         worldCenter.z
       ));
     };
@@ -301,21 +299,60 @@ const FactoryFloorGame = () => {
     // 🌟 Modern AssetsManager approach
     const assetsManager = new AssetsManager(scene);
     assetsManager.useDefaultLoadingScreen = false;
-    const meshTask = assetsManager.addMeshTask(
-      "load-glb",
+    
+    // Load floor tiles (existing)
+    const floorTask = assetsManager.addMeshTask(
+      "load-floor",
       "",
-      "/glbs/",
+      "/models/", // Your models directory
       "floor_tiles_parts.glb"
     );
+    
+    // NEW: Add player model loading task
+    const playerTask = assetsManager.addMeshTask(
+      "load-player",
+      "",
+      "/models/", // Same directory as floor tiles
+      "cube_robot_-_animated.glb" // Your player model file
+    );
 
-    meshTask.onSuccess = (task) => {
+    floorTask.onSuccess = (task) => {
       console.log("GLB loaded successfully");
       createFloor(task);
       fadeIn();
     };
 
-    meshTask.onError = (task, message) => {
+    floorTask.onError = (task, message) => {
       console.error("GLB load failed:", message);
+    };
+
+    playerTask.onSuccess = (task) => {
+      const rootMesh = task.loadedMeshes[0];
+      if (rootMesh) {
+        // Hide placeholder
+        player.placeholder.setEnabled(false);
+        
+        // Configure loaded model
+        rootMesh.name = "player_model";
+        rootMesh.parent = player.container;
+        rootMesh.scaling = new Vector3(40, 40, 40); // Adjust scale as needed
+        
+        // Make all child meshes non-pickable too
+        task.loadedMeshes.forEach(mesh => {
+          mesh.isPickable = false;
+        });
+        
+        player.model = rootMesh;
+        
+        // Position adjustments if needed
+        rootMesh.position = new Vector3(0, 40, 0);
+        rootMesh.rotation = Vector3.Zero();
+      }
+    };
+    
+    playerTask.onError = (task, message) => {
+      console.error("Player model failed to load:", message);
+      // Keep using the placeholder sphere
     };
 
     assetsManager.load();
