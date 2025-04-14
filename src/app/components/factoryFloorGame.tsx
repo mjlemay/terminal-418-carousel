@@ -15,6 +15,7 @@ import {
   StandardMaterial,
   MeshBuilder,
   Mesh,
+  Material,
 } from '@babylonjs/core';
 import "@babylonjs/loaders/glTF";
 
@@ -24,7 +25,8 @@ const GRID_SIZE = 25;
 const TILE_SIZE = 40;
 const halfGrid = GRID_SIZE / 2;
 const TILE_GAP = 0.025;
-const STEP = TILE_SIZE + TILE_GAP;
+const INDICATOR_SIZE = TILE_SIZE * 0.8; // Slightly smaller than tile
+const INDICATOR_HEIGHT = 5; // Height above tiles
 
 const tiles = {
   'wall_north': {
@@ -56,6 +58,7 @@ Engine.DefaultLoadingScreenFactory = () => ({
 
 const FactoryFloorGame = () => {
   const canvasRef = useRef(null);
+  const indicatorRef = useRef<Mesh | null>(null);
 
 
   const initializeScene = () => {
@@ -82,13 +85,13 @@ const FactoryFloorGame = () => {
       "industrialOverlordCam",
       Math.PI / 2, // Azimuth (side view)
       Math.PI / 6, // Elevation (30 degree angle)
-      400, // Double the original distance (200 -> 400)
+      300,
       Vector3.Zero(),
       scene
     );
 
     // Lock camera controls
-    camera.lowerRadiusLimit = camera.upperRadiusLimit = 400; // Fixed distance
+    camera.lowerRadiusLimit = camera.upperRadiusLimit = 300; // Fixed distance
     camera.lowerBetaLimit = Math.PI / 6; // Minimum vertical angle
     camera.upperBetaLimit = Math.PI / 3; // Maximum vertical angle
     camera.inputs.attached.mousewheel.detachControl();
@@ -132,39 +135,73 @@ const FactoryFloorGame = () => {
     const player = createPlayer(scene);
     camera.setTarget(player.container);
     camera.lockedTarget = player.container;
+    const createIndicator = () => {
+      const indicator = MeshBuilder.CreateBox("tileIndicator", {
+        width: INDICATOR_SIZE,
+        height: 2, // Thin box
+        depth: INDICATOR_SIZE
+      }, scene);
+      
+      indicator.isPickable = false;
+      indicator.visibility = 0; // Start hidden
+      indicator.position.y = INDICATOR_HEIGHT;
+      
+      // Create material with opacity
+      const indicatorMat = new StandardMaterial("indicatorMat", scene);
+      indicatorMat.emissiveColor = new Color3(1, 1, 1); // Yellow glow
+      indicatorMat.diffuseColor = new Color3(0.5, 0.5, 0.5); // Base yellow
+      indicatorMat.alpha = 0.25; 
+      indicatorMat.transparencyMode = Material.MATERIAL_ALPHABLEND; // Enable transparency
+      
+      // For proper transparency rendering
+      indicatorMat.backFaceCulling = false;
+      indicatorMat.zOffset = -1; // Helps prevent depth issues
+      
+      indicator.material = indicatorMat;
+      indicatorRef.current = indicator;
+      return indicator;
+    };
+
+    const indicator = createIndicator();
 
     const movePlayerTo = (target: Vector3) => {
       const duration = 1000;
       let startTime = Date.now();
       const startPos = player.container.position.clone();
-      
+
       const animate = () => {
         const elapsed = Date.now() - startTime;
         const progress = Math.min(elapsed / duration, 1);
-        
-        const easeProgress = progress < 0.5 
-          ? 4 * progress * progress * progress 
+
+        const easeProgress = progress < 0.5
+          ? 4 * progress * progress * progress
           : 1 - Math.pow(-2 * progress + 2, 3) / 2;
-        
+
         // Move only the X and Z coordinates, keeping Y at 0 (height handled by model position)
         player.container.position = new Vector3(
           startPos.x + (target.x - startPos.x) * easeProgress,
           0, // Container stays at ground level
           startPos.z + (target.z - startPos.z) * easeProgress
         );
-        
+
         if (progress < 1) {
           requestAnimationFrame(animate);
         }
       };
-      
+
       animate();
     };
 
     const handleTileClick = (tileGroup: TransformNode) => {
-      const meshes = tileGroup.getChildMeshes(true).filter(m => m.isEnabled() && m.isVisible);
+      // Show and position the indicator
+      if (indicatorRef.current) {
+        indicatorRef.current.visibility = 1;
+        indicatorRef.current.position.x = tileGroup.position.x;
+        indicatorRef.current.position.z = tileGroup.position.z;
+      }
 
       // Calculate the true world-space center of all visible tile meshes
+      const meshes = tileGroup.getChildMeshes(true).filter(m => m.isEnabled() && m.isVisible);
       let min = new Vector3(Infinity, Infinity, Infinity);
       let max = new Vector3(-Infinity, -Infinity, -Infinity);
 
@@ -319,11 +356,11 @@ const FactoryFloorGame = () => {
         // Position the model 40 units above the container
         rootMesh.position = new Vector3(0, 40, 0);
         rootMesh.scaling = new Vector3(40, 40, 40);
-        
+
         task.loadedMeshes.forEach(mesh => {
           mesh.isPickable = false;
         });
-        
+
         player.model = rootMesh;
       }
     };
@@ -335,12 +372,28 @@ const FactoryFloorGame = () => {
     assetsManager.load();
 
     // Render loop
-    engine.runRenderLoop(() => scene.render());
+    // Add this to your render loop
+    engine.runRenderLoop(() => {
+      if (indicatorRef.current) {
+        // Gentle pulsing animation with opacity variation
+        const pulse = Math.sin(performance.now() * 0.005) * 0.15;
+        indicatorRef.current.scaling.y = 1 + pulse;
+        
+        // Slightly modulate opacity during pulse
+        if (indicatorRef.current.visibility > 0) {
+          (indicatorRef.current.material as StandardMaterial).alpha = 0.25 + pulse;
+        }
+      }
+      scene.render();
+    });
 
     // Cleanup
     return () => {
+      if (indicatorRef.current) {
+        indicatorRef.current.dispose();
+      }
       engine.dispose();
-    }
+    };
   }
 
   useEffect(() => {
