@@ -14,7 +14,6 @@ import {
   TransformNode,
   StandardMaterial,
   MeshBuilder,
-  HighlightLayer,
   Mesh,
 } from '@babylonjs/core';
 import "@babylonjs/loaders/glTF";
@@ -57,7 +56,6 @@ Engine.DefaultLoadingScreenFactory = () => ({
 
 const FactoryFloorGame = () => {
   const canvasRef = useRef(null);
-  const highlightLayerRef = useRef<HighlightLayer | null>(null);
 
 
   const initializeScene = () => {
@@ -66,19 +64,6 @@ const FactoryFloorGame = () => {
 
     const scene = new Scene(engine);
     scene.collisionsEnabled = true; // 👈 Add this
-    highlightLayerRef.current = new HighlightLayer("highlight", scene, {
-      mainTextureRatio: 1,
-      blurHorizontalSize: 0.5,
-      blurVerticalSize: 0.5,
-      isStroke: true // This replaces the old alpha blending approach
-    });
-    if (highlightLayerRef.current) {
-      highlightLayerRef.current.innerGlow = false;
-      highlightLayerRef.current.outerGlow = true;
-      highlightLayerRef.current.outerGlow = true;
-      highlightLayerRef.current.blurHorizontalSize = 0.8;
-      highlightLayerRef.current.blurVerticalSize = 0.8;
-    }
 
     let fadeAlpha = 0; // Start fully transparent
     scene.clearColor = new Color4(0.1, 0.1, 0.15, fadeAlpha); // Your bg color + alpha
@@ -177,10 +162,7 @@ const FactoryFloorGame = () => {
     };
 
     const handleTileClick = (tileGroup: TransformNode) => {
-      // Highlight the tile
-      highlightLayerRef.current?.removeAllMeshes();
       const meshes = tileGroup.getChildMeshes(true).filter(m => m.isEnabled() && m.isVisible);
-      meshes.forEach(mesh => highlightLayerRef.current?.addMesh(mesh as Mesh, Color3.Yellow()));
 
       // Calculate the true world-space center of all visible tile meshes
       let min = new Vector3(Infinity, Infinity, Infinity);
@@ -357,7 +339,6 @@ const FactoryFloorGame = () => {
 
     // Cleanup
     return () => {
-      highlightLayerRef.current?.dispose();
       engine.dispose();
     }
   }
