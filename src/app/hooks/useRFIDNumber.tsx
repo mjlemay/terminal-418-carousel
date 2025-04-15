@@ -35,7 +35,6 @@ export function useRFIDNumber(enabled:boolean) {
         ) {
             setCodeString(''); // resets reader if cps is inconsistent
         }
-        console.log('ID_LENGTH', ID_LENGTH);
         // clear values if rfid value or has reach id length
         if (
             (

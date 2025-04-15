@@ -4,18 +4,16 @@ import DataContextCreator from './dataContextCreator';
 import {
   Action,
   AppProviderValues,
-  UserStore,
+  Store,
 } from '../lib/types';
 import {
   createLog,
   getUser,
   getLogs,
-  unSetUser
+  unSetUser,
+  getTiles,
+  setSelectedTile
 } from './appsActions';
-import { unset } from 'lodash';
-
-
-//TODO: ADD ACTION IN SCAN HOOK FOR SETTING USER
 
 const appSchema = {
   user: {
@@ -24,10 +22,12 @@ const appSchema = {
     created_at: null,
     updated_at: null,
   },
+  selectedTile: null,
+  factoryTiles: [],
   logs: []
 }
 
-const appContext:UserStore = merge({}, appSchema);
+const appContext:Store = merge({}, appSchema);
 
 export const appReducer = (state:AppProviderValues, action: Action) => {
   const {payload, type = null} = action;
@@ -39,6 +39,12 @@ export const appReducer = (state:AppProviderValues, action: Action) => {
       break;
     case 'GET_LOGS':
       clonedState.logs = payload;
+      break;
+    case 'GET_TILES':
+      clonedState.factoryTiles = payload;
+      break;
+    case 'SET_SELECTED_TILE':
+      clonedState.selectedTile = payload;
       break;
     case 'UNSET_USER':
       clonedState.user = appSchema;
@@ -56,6 +62,8 @@ export const { Context, Provider } = DataContextCreator(
     createLog, 
     getLogs,
     getUser,
+    getTiles,
+    setSelectedTile,
     unSetUser,
   }, 
   appContext

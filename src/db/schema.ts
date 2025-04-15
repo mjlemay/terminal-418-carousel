@@ -35,10 +35,12 @@ export const vinhGame = pgTable('vinhGame', {
   created_at: timestamp().defaultNow(),
 });
 
-export const usersRelations = relations(users, ({ many }) => ({
-  posts: many(scans),
-}));
+export const factoryGame = pgTable('factoryGame', {
+  id: serial('id').primaryKey(),
+  map_name: text(),
+  tile_name: text(),
+  meta: text(),
+  created_at: timestamp().defaultNow(),
+  updated_at: timestamp().defaultNow(),
+});
 
-export const scansRelations = relations(scans, ({ one }) => ({
-  author: one(users, { fields: [scans.id], references: [users.id] }),
-}));

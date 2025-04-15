@@ -1,27 +1,27 @@
 import { NextResponse } from 'next/server';
 import db from '@/db/db';
-import { scans } from '@/db/schema';
+import { factoryGame } from '@/db/schema';
 import { isValidHex } from '@/app/lib/hex';
  
 const DEVICE_NAME = process.env.NEXT_PUBLIC_DEVICE_NAME || 'unknown_terminal';
 
 export async function GET() {
-  console.log('------ GET SCANS -----');
   const response = await db
   .select()
-	.from(scans);
+	.from(factoryGame);
 
   return NextResponse.json(response);
 }
 
 export async function POST(req:any) {
   const body = await req.json();
-  const scanId:string = isValidHex(body.scanId) ? body.scanId : null;
-  let scan = { 
-    scan_id: scanId,
-    device_id: DEVICE_NAME,
+  const meta = body.meta; // Extract "meta" from the request body
+  let factoryTileDataum = { 
+    map_name: body.mapName,
+    tile_name: body.tileName,
+    meta
   }
-  const response = await db.insert(scans).values(scan);
+  const response = await db.insert(factoryGame).values(factoryTileDataum);
 
   return NextResponse.json(response);
 }

@@ -4,10 +4,10 @@ import { vinhGame } from '@/db/schema';
 import { eq } from "drizzle-orm";
 import { isValidHex } from '@/app/lib/hex';
  
-const DEVICE_NAME = process.env.DEVICE_NAME || 'unknown_terminal';
+const DEVICE_NAME = process.env.NEXT_PUBLIC_DEVICE_NAME || 'unknown_terminal';
 
 export async function GET(req: any) {
-  console.log('------ GET TAG SCAn-----');
+  console.log('------ GET TAG SCAN-----');
   const today: string = new Date().toLocaleDateString('en-US', {
     year: 'numeric',
     month: '2-digit',

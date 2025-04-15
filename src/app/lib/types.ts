@@ -6,18 +6,29 @@ export type User = {
     updated_at: string | null,
     }
 
-export type UserStore = {
+export type Store = {
     user?: User,
     logs?: Scan[],
+    selectedTile: string | null,
+    factoryTiles: FactoryTileMeta[],
 }
 
 export type Scan = {
-    id: number;
-    scan_id: string;
-    device_id?: string;
-    meta?:string;
-    created_at: string;
+    id: number,
+    scan_id: string,
+    device_id?: string,
+    meta?:string,
+    created_at: string,
 }
+
+export type FactoryTileMeta = {
+    id: number,
+    map_name: string,
+    tile_name: string,
+    meta?: string,
+    created_at: string,
+    updated_at: string,
+} 
 
 export interface scanState {
     scans: Scan[],
@@ -27,7 +38,7 @@ export interface scanState {
     // getUser: (scanId: string) => void,
 }
 
-export type ActionTypes = 'GET_USER' | 'GET_LOGS' | 'CREATE_LOG' | 'PUT_USER' | 'UNSET_USER';
+export type ActionTypes = 'GET_USER' | 'GET_LOGS' | 'GET_TILES' |'CREATE_LOG' | 'PUT_USER' | 'UNSET_USER' | 'SET_SELECTED_TILE' | 'SET_TILE';
 
 export interface Action {
     type: ActionTypes,
@@ -37,14 +48,16 @@ export interface Action {
 export type DispatchFunc = (dispatch: Action) => void;
 
 type ProviderDispatch = {
-    getLogs: () => void;
-    unSetUser: () => void;
-    getUser: (scanId: string) => void;
-    createLog: (scanId: string) => void;
+    getLogs: () => void,
+    unSetUser: () => void,
+    getUser: (scanId: string) => void,
+    createLog: (scanId: string) => void,
+    getTiles: () => void,
+    setSelectedTile: (tileName: string) => void,
 }
 
 type ProviderValues = {
-    state: UserStore,
+    state: Store,
     [key: string]: Object | Function,
 }
 

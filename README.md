@@ -12,7 +12,7 @@ DB_HOST = http://localhost:5432  # url for local build or whatever the cdb is ho
 DB_USER = pgUserName  # user name to access you postgres database
 DB_PASSWORD = pgUserPassword  # user password to access you postgres database
 DB_NAME = pgDbName  # database to save the tables to
-DEVICE_NAME = terminal418 #name of the device in the device_id column (optional)
+NEXT_PUBLIC_DEVICE_NAME = terminal418 #name of the device in the device_id column (optional)
 NEXT_PUBLIC_HRS_OFFSET = 8 #number of hours offset from DB time
 ``` 
 

@@ -1,4 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import React, { use, useEffect, useRef } from 'react';
+import {
+  AppProviderValues,
+} from '../lib/types';
+import { useContext } from 'react';
+import { Context } from '../lib/appContext';
+import { allianceArray } from '../lib/constants';
 import {
   Engine,
   Scene,
@@ -15,18 +21,42 @@ import {
   StandardMaterial,
   MeshBuilder,
   Mesh,
+  PointLight,
   Material,
 } from '@babylonjs/core';
 import "@babylonjs/loaders/glTF";
 
 
 // Grid setup
-const GRID_SIZE = 25;
+const GRID_SIZE = 30;
 const TILE_SIZE = 40;
 const halfGrid = GRID_SIZE / 2;
 const TILE_GAP = 0.025;
 const INDICATOR_SIZE = TILE_SIZE * 0.8; // Slightly smaller than tile
 const INDICATOR_HEIGHT = 5; // Height above tiles
+
+const factionGlow = [
+  {
+    diffuseColor: new Color3(1, 0, 0),
+    emissiveColor: new Color3(1, 0, 0),
+    ambientColor: new Color3(1, 0, 0),
+  },
+  {
+    diffuseColor: new Color3(1, 1, 0),
+    emissiveColor: new Color3(1, 1, 0),
+    ambientColor: new Color3(1, 1, 0),
+  },
+  {
+    diffuseColor: new Color3(0, 1, 1),
+    emissiveColor: new Color3(0, 1, 1),
+    ambientColor: new Color3(0, 1, 1),
+  },
+  {
+    diffuseColor: new Color3(0, 0, 0),
+    emissiveColor: new Color3(0.25, 0.25, 0.25),
+    ambientColor: new Color3(0.2, 0.2, 0.2),
+  },
+];
 
 const tiles = {
   'wall_north': {
@@ -56,19 +86,79 @@ Engine.DefaultLoadingScreenFactory = () => ({
   loadingUIText: ""
 });
 
+
 const FactoryFloorGame = () => {
+  const {
+    state,
+    getTiles = () => { },
+    setSelectedTile = () => { },
+  }: AppProviderValues = useContext(Context);
+  const { factoryTiles, selectedTile } = state;
+  const tileMetaHashes = factoryTiles.map(t => 
+  `${t.tile_name}:${JSON.stringify(t.meta)}`
+).join('|');
+
+  // Refs
   const canvasRef = useRef(null);
   const indicatorRef = useRef<Mesh | null>(null);
+  const sceneRef = useRef<Scene | null>(null);
+  const engineRef = useRef<Engine | null>(null);
+  const tileGroupsRef = useRef<TransformNode[]>([]);
 
-
+  const updateTiles = () => {
+    if (!sceneRef.current || !tileGroupsRef.current.length || !factoryTiles.length) {
+      console.log("Update skipped - scene not ready or no tiles");
+      return;
+    }
+    console.log('updateTiles...');
+  
+    tileGroupsRef.current.forEach(tileGroup => {
+      const tileName = tileGroup.name;
+      const tileDatum = factoryTiles.find(tile => tile.tile_name === tileName);
+      const defaultTileMeta = {
+        tileType: 'glow_square',
+        poweredBy: "default",
+      };
+      const tileMeta = tileDatum ? JSON.parse(tileDatum.meta as string) : defaultTileMeta;
+      const glowIndex = allianceArray.indexOf(tileMeta.poweredBy);
+      const allianceGlow = factionGlow[glowIndex >= 0 ? glowIndex : 3];
+      tileGroup.getChildMeshes(false).forEach(mesh => {
+        if (mesh.material?.name.includes("M_0063")) { // More flexible name check
+          // Create new material for each mesh
+          const newMaterial = new StandardMaterial(`tile_${tileName}_material`, sceneRef.current!);
+          
+          // Apply faction colors
+          newMaterial.diffuseColor = allianceGlow.diffuseColor.clone();
+          newMaterial.emissiveColor = allianceGlow.emissiveColor.clone();
+          newMaterial.ambientColor = allianceGlow.ambientColor.clone();
+          
+          // Configure material properties
+          newMaterial.specularColor = Color3.Black(); // No specular highlights
+          newMaterial.alpha = 1.0;
+          
+          // Apply to mesh
+          mesh.material = newMaterial;
+          
+          // Dispose old material if needed
+          if (mesh.material && mesh.material !== newMaterial) {
+            mesh.material.dispose();
+          }
+        }
+      });
+    });
+  
+    // Force scene refresh
+    sceneRef.current!.getEngine().clear(sceneRef.current!.clearColor, true, true);
+  };
+  
   const initializeScene = () => {
     // Initialize Babylon.js
     const engine = new Engine(canvasRef.current, true);
-
     const scene = new Scene(engine);
-    scene.collisionsEnabled = true; // 👈 Add this
-
-    let fadeAlpha = 0; // Start fully transparent
+    engineRef.current = engine;
+    sceneRef.current = scene;
+    scene.collisionsEnabled = true;
+    let fadeAlpha = 0;
     scene.clearColor = new Color4(0.1, 0.1, 0.15, fadeAlpha); // Your bg color + alpha
 
     // After assets load (in meshTask.onSuccess):
@@ -104,13 +194,31 @@ const FactoryFloorGame = () => {
     camera.orthoRight = (GRID_SIZE * TILE_SIZE / 4) * zoomFactor;
 
 
-    // Lighting
-    const envLight = new HemisphericLight("envLight", new Vector3(0, 1, 0), scene);
-    envLight.intensity = 0.1;
-    envLight.groundColor = new Color3(0.3, 0.3, 0.4); // Cool shadows
-    const sunLight = new DirectionalLight("sunLight", new Vector3(-1, -2, -1), scene);
-    sunLight.intensity = 0.25;
-    sunLight.shadowEnabled = true; // Optional dynamic shadows
+    const createSciFiLights = (scene: Scene) => {
+      // Cool blue ambient fill light
+      const ambientLight = new HemisphericLight("ambient", new Vector3(0, 1, 0), scene);
+      ambientLight.intensity = 0.2;
+      ambientLight.groundColor = new Color3(0.1, 0.1, 0.3);
+      ambientLight.diffuse = new Color3(0.3, 0.3, 0.8);
+
+      // Neon directional lights (multiple for sci-fi effect)
+      const neonLight1 = new DirectionalLight("neon1", new Vector3(-0.5, -1, 0.5), scene);
+      neonLight1.intensity = 0.4;
+      neonLight1.diffuse = new Color3(0, 1, 1); // Cyan
+      neonLight1.specular = new Color3(0.5, 1, 1);
+
+      const neonLight2 = new DirectionalLight("neon2", new Vector3(1, -0.7, -0.5), scene);
+      neonLight2.intensity = 0.3;
+      neonLight2.diffuse = new Color3(1, 0, 1); // Magenta
+      neonLight2.specular = new Color3(1, 0.5, 1);
+
+      // Add glowing emissive light from below
+      const floorLight = new PointLight("floorGlow", new Vector3(0, -10, 0), scene);
+      floorLight.diffuse = new Color3(0.2, 0.8, 1);
+      floorLight.intensity = 0.5;
+      floorLight.range = 100;
+    };
+    createSciFiLights(scene);
 
     // Existing player placeholder setup
     const createPlayer = (scene: Scene) => {
@@ -141,22 +249,22 @@ const FactoryFloorGame = () => {
         height: 2, // Thin box
         depth: INDICATOR_SIZE
       }, scene);
-      
+
       indicator.isPickable = false;
       indicator.visibility = 0; // Start hidden
       indicator.position.y = INDICATOR_HEIGHT;
-      
+
       // Create material with opacity
       const indicatorMat = new StandardMaterial("indicatorMat", scene);
-      indicatorMat.emissiveColor = new Color3(1, 1, 1); // Yellow glow
+      indicatorMat.emissiveColor = new Color3(1, 0, 0.6); // Yellow glow
       indicatorMat.diffuseColor = new Color3(0.5, 0.5, 0.5); // Base yellow
-      indicatorMat.alpha = 0.25; 
+      indicatorMat.alpha = 0.25;
       indicatorMat.transparencyMode = Material.MATERIAL_ALPHABLEND; // Enable transparency
-      
+
       // For proper transparency rendering
       indicatorMat.backFaceCulling = false;
       indicatorMat.zOffset = -1; // Helps prevent depth issues
-      
+
       indicator.material = indicatorMat;
       indicatorRef.current = indicator;
       return indicator;
@@ -198,6 +306,7 @@ const FactoryFloorGame = () => {
         indicatorRef.current.visibility = 1;
         indicatorRef.current.position.x = tileGroup.position.x;
         indicatorRef.current.position.z = tileGroup.position.z;
+        setSelectedTile(tileGroup.name as string);
       }
 
       // Calculate the true world-space center of all visible tile meshes
@@ -221,6 +330,7 @@ const FactoryFloorGame = () => {
         0, // Player height
         worldCenter.z
       ));
+      updateTiles();
     };
 
     // Create factor floor Function
@@ -258,12 +368,15 @@ const FactoryFloorGame = () => {
         return Vector3.Lerp(min, max, 0.5);
       };
 
+      tileGroupsRef.current = [];
+
       for (let x = 0; x < GRID_SIZE; x++) {
         for (let z = 0; z < GRID_SIZE; z++) {
           // Create parent node for this tile
           const xPos = (x - halfGrid) * (TILE_SIZE + TILE_GAP);
           const zPos = (z - halfGrid) * (TILE_SIZE + TILE_GAP);
-          const tileGroup = new TransformNode(`tile_group_${x}_${z}`, scene);
+          const tileName = `tile_group_${x}_${z}`;
+          const tileGroup = new TransformNode(tileName, scene);
           tileGroup.position = new Vector3(
             xPos,
             0,
@@ -292,13 +405,9 @@ const FactoryFloorGame = () => {
               const visibleCenter = getVisibleBoundingCenter(tileClone);
               tileClone.position.subtractInPlace(visibleCenter);
               // color the Tile
-              if (tileClone.material?.name === "M_0063_GreenYellow") {
-                (tileClone.material as StandardMaterial).diffuseColor = new Color3(1, 0, 0);      // Base color (red)
-                (tileClone.material as StandardMaterial).emissiveColor = new Color3(0, 1, 0);     // Glow (green)
-                (tileClone.material as StandardMaterial).ambientColor = new Color3(0.2, 0.2, 0.2)
-              }
               tileClone.parent = tileGroup;
               tileClone.setEnabled(true);
+              tileGroupsRef.current.push(tileGroup);
             }
           });
         }
@@ -339,9 +448,9 @@ const FactoryFloorGame = () => {
     );
 
     floorTask.onSuccess = (task) => {
-      console.log("GLB loaded successfully");
       createFloor(task);
       fadeIn();
+      updateTiles();
     };
 
     floorTask.onError = (task, message) => {
@@ -378,7 +487,7 @@ const FactoryFloorGame = () => {
         // Gentle pulsing animation with opacity variation
         const pulse = Math.sin(performance.now() * 0.005) * 0.15;
         indicatorRef.current.scaling.y = 1 + pulse;
-        
+
         // Slightly modulate opacity during pulse
         if (indicatorRef.current.visibility > 0) {
           (indicatorRef.current.material as StandardMaterial).alpha = 0.25 + pulse;
@@ -397,12 +506,24 @@ const FactoryFloorGame = () => {
   }
 
   useEffect(() => {
-    if (!canvasRef.current) {
-      return;
-    }
-    // Initialize the scene when the component mounts
-    initializeScene();
+    const loadDataAndInitialize = async () => {
+      await getTiles?.();
+      if (canvasRef.current && state.factoryTiles) {
+        initializeScene();
+      }
+    };
+    loadDataAndInitialize();
   }, []);
+
+  useEffect(() => {
+    if (sceneRef.current && tileGroupsRef.current.length > 0 ) {
+      updateTiles(); 
+    }
+  }, [tileMetaHashes]);
+
+  useEffect(() => {
+    if (sceneRef.current) updateTiles();
+  }, [selectedTile]);
 
   return <canvas ref={canvasRef} style={{ width: '100%', height: '100vh' }} />;
 };

@@ -48,7 +48,6 @@ export default function Main () {
       const userId = user ? user.uid : null;
    
       const closeUserDrawer = () => {
-        console.log('closeUserDrawer');
         setDrawerOpen(false);
         unSetUser();
       }
@@ -77,12 +76,6 @@ export default function Main () {
               setReadReady(true);
               setLoading(false);
           }, READ_WAIT);
-      }
-    },[rifdNumber]);
-
-    useEffect(() => {
-      if (rifdNumber.length >= 4) {
-          console.log('rifdNumber', rifdNumber);
       }
     },[rifdNumber]);
 

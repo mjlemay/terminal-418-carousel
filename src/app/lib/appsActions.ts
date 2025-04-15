@@ -12,6 +12,24 @@ export const getLogs = (dispatch: DispatchFunc) => async () => {
     return data;
   }
 
+export const getTiles = (dispatch: DispatchFunc) => async () => {
+    const data = await requestData('/api/factoryMeta');
+    console.log('getTiles', data);
+    dispatch({
+        type: 'GET_TILES',
+        payload: data,
+    });
+    return data;
+}
+
+export const setSelectedTile = (dispatch: DispatchFunc) => async (tileName: string) => {
+    dispatch({
+        type: 'SET_SELECTED_TILE',
+        payload: tileName,
+    });
+    return tileName;
+}
+
 export const createLog = (dispatch: DispatchFunc) => async (scanId: string | null) => {
     const body = JSON.stringify({scanId});
     return requestData('/api/scan', body, 'post');
@@ -55,4 +73,3 @@ export const unSetUser = (dispatch: DispatchFunc) => () => {
     });
     return;
 }
-
