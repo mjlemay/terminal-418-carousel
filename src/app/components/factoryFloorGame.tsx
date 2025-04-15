@@ -69,13 +69,19 @@ const tiles = {
     meshPrefix: 'Mesh27',
   },
   'default_square': {
-    meshPrefix: 'Mesh19',
+    meshPrefix: 'Mesh17',
   },
   'vent_square': {
     meshPrefix: 'Mesh11',
   },
+  'grate_square': {
+    meshPrefix: 'Mesh19',
+  },
   'octogon_square': {
-    meshPrefix: 'Mesh',
+    meshPrefix: 'Mesh21',
+  },
+  'wires_square': {
+    meshPrefix: 'Mesh7_',
   },
 }
 
@@ -94,9 +100,9 @@ const FactoryFloorGame = () => {
     setSelectedTile = () => { },
   }: AppProviderValues = useContext(Context);
   const { factoryTiles, selectedTile } = state;
-  const tileMetaHashes = factoryTiles.map(t => 
-  `${t.tile_name}:${JSON.stringify(t.meta)}`
-).join('|');
+  const tileDataHash = factoryTiles
+  .map(t => `${t.tile_name}:${JSON.stringify(t.meta)}:${t.updated_at || ''}`)
+  .join('|');
 
   // Refs
   const canvasRef = useRef(null);
@@ -105,16 +111,15 @@ const FactoryFloorGame = () => {
   const engineRef = useRef<Engine | null>(null);
   const tileGroupsRef = useRef<TransformNode[]>([]);
 
-  const updateTiles = () => {
-    if (!sceneRef.current || !tileGroupsRef.current.length || !factoryTiles.length) {
-      console.log("Update skipped - scene not ready or no tiles");
+  const updateTiles = (latestTiles = factoryTiles) => {
+    if (!sceneRef.current || !tileGroupsRef.current.length || !latestTiles.length) {
       return;
     }
-    console.log('updateTiles...');
+    console.log('updateTiles', latestTiles);
   
     tileGroupsRef.current.forEach(tileGroup => {
       const tileName = tileGroup.name;
-      const tileDatum = factoryTiles.find(tile => tile.tile_name === tileName);
+      const tileDatum = latestTiles.find(tile => tile.tile_name === tileName);
       const defaultTileMeta = {
         tileType: 'glow_square',
         poweredBy: "default",
@@ -123,9 +128,9 @@ const FactoryFloorGame = () => {
       const glowIndex = allianceArray.indexOf(tileMeta.poweredBy);
       const allianceGlow = factionGlow[glowIndex >= 0 ? glowIndex : 3];
       tileGroup.getChildMeshes(false).forEach(mesh => {
-        if (mesh.material?.name.includes("M_0063")) { // More flexible name check
+        if (mesh.material?.name.includes("M_0063") || mesh.material?.name.includes("alliance_material")) { // More flexible name check
           // Create new material for each mesh
-          const newMaterial = new StandardMaterial(`tile_${tileName}_material`, sceneRef.current!);
+          const newMaterial = new StandardMaterial(`tile_${tileName}_alliance_material`, sceneRef.current!);
           
           // Apply faction colors
           newMaterial.diffuseColor = allianceGlow.diffuseColor.clone();
@@ -147,8 +152,9 @@ const FactoryFloorGame = () => {
       });
     });
   
-    // Force scene refresh
-    sceneRef.current!.getEngine().clear(sceneRef.current!.clearColor, true, true);
+  sceneRef.current!.getEngine().clear(sceneRef.current!.clearColor, true, true);
+  sceneRef.current!.render(); // Force immediate render
+  sceneRef.current!.freeActiveMeshes(); 
   };
   
   const initializeScene = () => {
@@ -407,6 +413,7 @@ const FactoryFloorGame = () => {
               // color the Tile
               tileClone.parent = tileGroup;
               tileClone.setEnabled(true);
+              
               tileGroupsRef.current.push(tileGroup);
             }
           });
@@ -516,14 +523,27 @@ const FactoryFloorGame = () => {
   }, []);
 
   useEffect(() => {
-    if (sceneRef.current && tileGroupsRef.current.length > 0 ) {
-      updateTiles(); 
-    }
-  }, [tileMetaHashes]);
-
+    if (!sceneRef.current || !tileGroupsRef.current.length) return;
+    
+    // Use requestAnimationFrame to ensure scene is ready
+    const frameId = requestAnimationFrame(() => {
+      updateTiles();
+    });
+    
+    return () => cancelAnimationFrame(frameId);
+  }, [tileDataHash, factoryTiles]);
+  
   useEffect(() => {
     if (sceneRef.current) updateTiles();
   }, [selectedTile]);
+
+  useEffect(() => {
+    return () => {
+      // Clean up tile groups when component unmounts
+      tileGroupsRef.current.forEach(group => group.dispose());
+      tileGroupsRef.current = [];
+    };
+  }, []);
 
   return <canvas ref={canvasRef} style={{ width: '100%', height: '100vh' }} />;
 };
