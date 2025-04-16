@@ -14,7 +14,6 @@ export const getLogs = (dispatch: DispatchFunc) => async () => {
 
 export const getTiles = (dispatch: DispatchFunc) => async () => {
     const data = await requestData('/api/factoryMeta');
-    console.log('getTiles', data);
     dispatch({
         type: 'GET_TILES',
         payload: data,

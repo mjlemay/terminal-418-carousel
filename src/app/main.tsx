@@ -56,6 +56,10 @@ export default function Main () {
           if (userId && !drawerOpen){
               setDrawerOpen(true);
           }
+          if (!userId && drawerOpen){
+              setDrawerOpen(false);
+
+          }
       }, [userId, drawerOpen]);
 
       useEffect(() => {
@@ -107,6 +111,7 @@ export default function Main () {
     //     ws.close();
     //   };
     // }, []);
+
     
 
     return (

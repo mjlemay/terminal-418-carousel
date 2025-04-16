@@ -115,7 +115,6 @@ const FactoryFloorGame = () => {
     if (!sceneRef.current || !tileGroupsRef.current.length || !latestTiles.length) {
       return;
     }
-    console.log('updateTiles', latestTiles);
   
     tileGroupsRef.current.forEach(tileGroup => {
       const tileName = tileGroup.name;
@@ -389,11 +388,8 @@ const FactoryFloorGame = () => {
             zPos
           );
 
-          // Determine which tile type to use
-          const getTileType = (x: number, z: number) => {
-            return (x + z) % 2 === 0 ? 'solid_square' : 'glow_square';
-          }
-          const tileType = getTileType(x, z);
+    
+          const tileType = 'glow_square';
           const sourceMeshes = tileMeshes[tileType];
 
           // Clone all meshes for this tile type
@@ -468,15 +464,53 @@ const FactoryFloorGame = () => {
       const rootMesh = task.loadedMeshes[0];
       if (rootMesh) {
         player.placeholder.setEnabled(false);
+        
         rootMesh.parent = player.container;
-        // Position the model 40 units above the container
         rootMesh.position = new Vector3(0, 40, 0);
         rootMesh.scaling = new Vector3(40, 40, 40);
-
+    
+        // Enhance all player model materials with glow
         task.loadedMeshes.forEach(mesh => {
           mesh.isPickable = false;
+          
+          if (mesh.material) {
+            const mat = mesh.material as StandardMaterial;
+            // Add emissive glow
+            mat.emissiveColor = new Color3(0, 0.6, 0.9);
+            mat.emissiveIntensity = 0.8;
+            // Enhance specular for shiny look
+            mat.specularColor = new Color3(0.3, 0.7, 1);
+            mat.specularPower = 30;
+            // Enable reflections
+            mat.reflectionFresnelParameters = {
+              bias: 0.5,
+              power: 2,
+              leftColor: Color3.White(),
+              rightColor: Color3.Black()
+            };
+          }
         });
-
+    
+        // Add dynamic glow effect to player model
+        let glowTime = 0;
+        scene.registerBeforeRender(() => {
+          glowTime += 0.03;
+          const glowIntensity = 0.7 + Math.sin(glowTime) * 0.3;
+          
+          task.loadedMeshes.forEach(mesh => {
+            if (mesh.material) {
+              const mat = mesh.material as StandardMaterial;
+              mat.emissiveColor = mat.emissiveColor.scale(glowIntensity);
+              // Add subtle color variation
+              mat.emissiveColor = new Color3(
+                0, 
+                0.5 + Math.sin(glowTime * 0.5) * 0.1, 
+                0.8 + Math.cos(glowTime * 0.7) * 0.1
+              );
+            }
+          });
+        });
+    
         player.model = rootMesh;
       }
     };

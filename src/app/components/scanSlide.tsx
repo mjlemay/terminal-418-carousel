@@ -20,6 +20,8 @@ import { useContext } from "react";
 import { Context } from "../lib/appContext";
 import { AppProviderValues } from "../lib/types";
 import Avatar from "./avatar";
+import { count } from "console";
+import { all } from "deepmerge";
 
 
 const colors = ["#c1ff72","#c1ff72","#c1ff72","#c1ff72","#c1ff72","#c1ff72","#c1ff72","#c1ff72","#c1ff72", "#c1ff72"];
@@ -37,7 +39,7 @@ export default function ScanSlide(): JSX.Element {
     const {
         state
     }: AppProviderValues = useContext(Context);
-    const { logs } = state;
+    const { logs, alliances} = state;
 
         const topScanners = () => {
           let topTenUsers = [];
@@ -95,32 +97,70 @@ export default function ScanSlide(): JSX.Element {
             datum.created_at = calDate(datum.created_at);
             return datum;
         });
+        const allianceData = (alliance:string) => {
+            console.log('users', users);
+            const allianceUsers = users?.filter((user:any) => {
+                if (user.meta) {
+                    const meta = JSON.parse(user.meta);
+                    console.log(meta.alliance, alliance);
+                    return meta.alliance === alliance;
+                }
+                return user;
+            });
+            console.log('allianceUsers', allianceUsers);
+            const allianceUserArr = allianceUsers?.map((user:any) => {
+                return user.id;
+            });
+            console.log('allianceUserArr', allianceUserArr);
+            const allianceData = simpleData?.filter((datum:any) => {
+                return allianceUserArr?.includes(datum.scan_id);
+            });
+            return allianceData;
+        };
         const dayData = countBy(simpleData, 'created_at');
-
+        const allianceDayData = (alliance:string) => {
+            const simpleAllianceData = allianceData(alliance)
+            return countBy(simpleAllianceData, 'created_at');
+        }
         return [
             {
                 day: minusFour.format('ddd'),
                 scans: dayData[minusFour.format('YYYY-MM-DD')] || 0,
+                endline: allianceDayData('Endline Solutions')[minusFour.format('YYYY-MM-DD')] || 0,
+                helix: allianceDayData('Helix Industries')[minusFour.format('YYYY-MM-DD')] || 0,
+                reboot: allianceDayData('Reboot Syndicate')[minusFour.format('YYYY-MM-DD')] || 0,
                 goal: dailyGoals[minusFour.format('ddd')],
             },
             {
                 day: minusThree.format('ddd'),
                 scans: dayData[minusThree.format('YYYY-MM-DD')] || 0,
+                endline: allianceDayData('Endline Solutions')[minusThree.format('YYYY-MM-DD')] || 0,
+                helix: allianceDayData('Helix Industries')[minusThree.format('YYYY-MM-DD')] || 0,
+                reboot: allianceDayData('Reboot Syndicate')[minusThree.format('YYYY-MM-DD')] || 0,
                 goal: dailyGoals[minusThree.format('ddd')],
             },
             {
                 day: minusTwo.format('ddd'),
                 scans: dayData[minusTwo.format('YYYY-MM-DD')] || 0,
+                endline: allianceDayData('Endline Solutions')[minusTwo.format('YYYY-MM-DD')] || 0,
+                helix: allianceDayData('Helix Industries')[minusTwo.format('YYYY-MM-DD')] || 0,
+                reboot: allianceDayData('Reboot Syndicate')[minusTwo.format('YYYY-MM-DD')] || 0,
                 goal: dailyGoals[minusTwo.format('ddd')],
             },
             {
                 day: minusOne.format('ddd'),
                 scans: dayData[minusOne.format('YYYY-MM-DD')] || 0,
+                endline: allianceDayData('Endline Solutions')[minusOne.format('YYYY-MM-DD')] || 0,
+                helix: allianceDayData('Helix Industries')[minusOne.format('YYYY-MM-DD')] || 0,
+                reboot: allianceDayData('Reboot Syndicate')[minusOne.format('YYYY-MM-DD')] || 0,
                 goal: dailyGoals[minusOne.format('ddd')],
             },
             {
                 day: today.format('ddd'),
                 scans: dayData[today.format('YYYY-MM-DD')] || 0,
+                endline: allianceDayData('Endline Solutions')[today.format('YYYY-MM-DD')] || 0,
+                helix: allianceDayData('Helix Industries')[today.format('YYYY-MM-DD')] || 0,
+                reboot: allianceDayData('Reboot Syndicate')[today.format('YYYY-MM-DD')] || 0,
                 goal: dailyGoals[today.format('ddd')],
             },
         ]
@@ -138,6 +178,9 @@ export default function ScanSlide(): JSX.Element {
                     <ReferenceLine y={1000} stroke="#c1ff72" />
                     <Line type="monotone" dataKey="goal" stroke="#c1ff72" strokeDasharray="5 5" />
                     <Area type="monotone" dataKey="scans" stroke="#fa66f7" fill="#fa66f7" />
+                    <Line type="monotone" dataKey="endline" stroke="#E92125" />
+                    <Line type="monotone" dataKey="helix" stroke="#FAB816" />
+                    <Line type="monotone" dataKey="reboot" stroke="#59BA93" />
                 </ComposedChart>
             </ResponsiveContainer>
             <h2 className="cyberpunk">Top Technicians</h2>
