@@ -21,6 +21,15 @@ export const getTiles = (dispatch: DispatchFunc) => async () => {
     return data;
 }
 
+export const getAllianceUsers = (dispatch: DispatchFunc) => async () => {
+    const data = await requestData('/api/user/alliance');
+    dispatch({
+        type: 'GET_ALLIANCE_USERS',
+        payload: data,
+    });
+    return data;
+}
+
 export const setSelectedTile = (dispatch: DispatchFunc) => async (tileName: string) => {
     dispatch({
         type: 'SET_SELECTED_TILE',

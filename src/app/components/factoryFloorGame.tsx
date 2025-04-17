@@ -23,6 +23,8 @@ import {
   Mesh,
   PointLight,
   Material,
+  ActionManager,
+  ExecuteCodeAction
 } from '@babylonjs/core';
 import "@babylonjs/loaders/glTF";
 
@@ -101,8 +103,8 @@ const FactoryFloorGame = () => {
   }: AppProviderValues = useContext(Context);
   const { factoryTiles, selectedTile } = state;
   const tileDataHash = factoryTiles
-  .map(t => `${t.tile_name}:${JSON.stringify(t.meta)}:${t.updated_at || ''}`)
-  .join('|');
+    .map(t => `${t.tile_name}:${JSON.stringify(t.meta)}:${t.updated_at || ''}`)
+    .join('|');
 
   // Refs
   const canvasRef = useRef(null);
@@ -115,7 +117,7 @@ const FactoryFloorGame = () => {
     if (!sceneRef.current || !tileGroupsRef.current.length || !latestTiles.length) {
       return;
     }
-  
+
     tileGroupsRef.current.forEach(tileGroup => {
       const tileName = tileGroup.name;
       const tileDatum = latestTiles.find(tile => tile.tile_name === tileName);
@@ -130,19 +132,19 @@ const FactoryFloorGame = () => {
         if (mesh.material?.name.includes("M_0063") || mesh.material?.name.includes("alliance_material")) { // More flexible name check
           // Create new material for each mesh
           const newMaterial = new StandardMaterial(`tile_${tileName}_alliance_material`, sceneRef.current!);
-          
+
           // Apply faction colors
           newMaterial.diffuseColor = allianceGlow.diffuseColor.clone();
           newMaterial.emissiveColor = allianceGlow.emissiveColor.clone();
           newMaterial.ambientColor = allianceGlow.ambientColor.clone();
-          
+
           // Configure material properties
           newMaterial.specularColor = Color3.Black(); // No specular highlights
           newMaterial.alpha = 1.0;
-          
+
           // Apply to mesh
           mesh.material = newMaterial;
-          
+
           // Dispose old material if needed
           if (mesh.material && mesh.material !== newMaterial) {
             mesh.material.dispose();
@@ -150,18 +152,30 @@ const FactoryFloorGame = () => {
         }
       });
     });
-  
-  sceneRef.current!.getEngine().clear(sceneRef.current!.clearColor, true, true);
-  sceneRef.current!.render(); // Force immediate render
-  sceneRef.current!.freeActiveMeshes(); 
+
+    sceneRef.current!.getEngine().clear(sceneRef.current!.clearColor, true, true);
+    sceneRef.current!.render(); // Force immediate render
+    sceneRef.current!.freeActiveMeshes();
   };
-  
+
   const initializeScene = () => {
     // Initialize Babylon.js
     const engine = new Engine(canvasRef.current, true);
     const scene = new Scene(engine);
     engineRef.current = engine;
     sceneRef.current = scene;
+    // Disable all keyboard inputs
+    scene.actionManager = new ActionManager(scene);
+    scene.actionManager.registerAction(
+      new ExecuteCodeAction(ActionManager.OnKeyDownTrigger, (evt) => {
+        evt.sourceEvent.preventDefault();
+      })
+    );
+    scene.actionManager.registerAction(
+      new ExecuteCodeAction(ActionManager.OnKeyUpTrigger, (evt) => {
+        evt.sourceEvent.preventDefault();
+      })
+    );
     scene.collisionsEnabled = true;
     let fadeAlpha = 0;
     scene.clearColor = new Color4(0.1, 0.1, 0.15, fadeAlpha); // Your bg color + alpha
@@ -388,7 +402,7 @@ const FactoryFloorGame = () => {
             zPos
           );
 
-    
+
           const tileType = 'glow_square';
           const sourceMeshes = tileMeshes[tileType];
 
@@ -409,7 +423,7 @@ const FactoryFloorGame = () => {
               // color the Tile
               tileClone.parent = tileGroup;
               tileClone.setEnabled(true);
-              
+
               tileGroupsRef.current.push(tileGroup);
             }
           });
@@ -464,53 +478,15 @@ const FactoryFloorGame = () => {
       const rootMesh = task.loadedMeshes[0];
       if (rootMesh) {
         player.placeholder.setEnabled(false);
-        
         rootMesh.parent = player.container;
+        // Position the model 40 units above the container
         rootMesh.position = new Vector3(0, 40, 0);
         rootMesh.scaling = new Vector3(40, 40, 40);
-    
-        // Enhance all player model materials with glow
+
         task.loadedMeshes.forEach(mesh => {
           mesh.isPickable = false;
-          
-          if (mesh.material) {
-            const mat = mesh.material as StandardMaterial;
-            // Add emissive glow
-            mat.emissiveColor = new Color3(0, 0.6, 0.9);
-            mat.emissiveIntensity = 0.8;
-            // Enhance specular for shiny look
-            mat.specularColor = new Color3(0.3, 0.7, 1);
-            mat.specularPower = 30;
-            // Enable reflections
-            mat.reflectionFresnelParameters = {
-              bias: 0.5,
-              power: 2,
-              leftColor: Color3.White(),
-              rightColor: Color3.Black()
-            };
-          }
         });
-    
-        // Add dynamic glow effect to player model
-        let glowTime = 0;
-        scene.registerBeforeRender(() => {
-          glowTime += 0.03;
-          const glowIntensity = 0.7 + Math.sin(glowTime) * 0.3;
-          
-          task.loadedMeshes.forEach(mesh => {
-            if (mesh.material) {
-              const mat = mesh.material as StandardMaterial;
-              mat.emissiveColor = mat.emissiveColor.scale(glowIntensity);
-              // Add subtle color variation
-              mat.emissiveColor = new Color3(
-                0, 
-                0.5 + Math.sin(glowTime * 0.5) * 0.1, 
-                0.8 + Math.cos(glowTime * 0.7) * 0.1
-              );
-            }
-          });
-        });
-    
+
         player.model = rootMesh;
       }
     };
@@ -558,15 +534,15 @@ const FactoryFloorGame = () => {
 
   useEffect(() => {
     if (!sceneRef.current || !tileGroupsRef.current.length) return;
-    
+
     // Use requestAnimationFrame to ensure scene is ready
     const frameId = requestAnimationFrame(() => {
       updateTiles();
     });
-    
+
     return () => cancelAnimationFrame(frameId);
   }, [tileDataHash, factoryTiles]);
-  
+
   useEffect(() => {
     if (sceneRef.current) updateTiles();
   }, [selectedTile]);

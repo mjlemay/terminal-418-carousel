@@ -16,12 +16,10 @@ import {
     ReferenceLine,
     CartesianGrid
  } from "recharts";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { Context } from "../lib/appContext";
 import { AppProviderValues } from "../lib/types";
 import Avatar from "./avatar";
-import { count } from "console";
-import { all } from "deepmerge";
 
 
 const colors = ["#c1ff72","#c1ff72","#c1ff72","#c1ff72","#c1ff72","#c1ff72","#c1ff72","#c1ff72","#c1ff72", "#c1ff72"];
@@ -37,9 +35,11 @@ const dailyGoals: any = {
 
 export default function ScanSlide(): JSX.Element {
     const {
-        state
+        state, 
+        getLogs = () => { },
+        getAllianceUsers = () => { },
     }: AppProviderValues = useContext(Context);
-    const { logs, alliances} = state;
+    const { logs, allianceUsers } = state;
 
         const topScanners = () => {
           let topTenUsers = [];
@@ -97,31 +97,22 @@ export default function ScanSlide(): JSX.Element {
             datum.created_at = calDate(datum.created_at);
             return datum;
         });
+        const dayData = countBy(simpleData, 'created_at');
         const allianceData = (alliance:string) => {
-            console.log('users', users);
-            const allianceUsers = users?.filter((user:any) => {
-                if (user.meta) {
-                    const meta = JSON.parse(user.meta);
-                    console.log(meta.alliance, alliance);
-                    return meta.alliance === alliance;
-                }
-                return user;
+            const allianceUserArr = allianceUsers[alliance]?.map((user:any) => {
+                return user.user_id;
             });
-            console.log('allianceUsers', allianceUsers);
-            const allianceUserArr = allianceUsers?.map((user:any) => {
-                return user.id;
-            });
-            console.log('allianceUserArr', allianceUserArr);
             const allianceData = simpleData?.filter((datum:any) => {
                 return allianceUserArr?.includes(datum.scan_id);
             });
             return allianceData;
         };
-        const dayData = countBy(simpleData, 'created_at');
-        const allianceDayData = (alliance:string) => {
-            const simpleAllianceData = allianceData(alliance)
-            return countBy(simpleAllianceData, 'created_at');
-        }
+        const allianceDayData = (alliance:string) => {  
+            const simpleAllianceData = allianceData(alliance);
+            const allianceCount = countBy(simpleAllianceData, 'created_at');
+            return allianceCount;
+        };
+
         return [
             {
                 day: minusFour.format('ddd'),
@@ -166,6 +157,12 @@ export default function ScanSlide(): JSX.Element {
         ]
     };
 
+    useEffect(() => {
+        getAllianceUsers();
+        getLogs();
+    }
+    , []);
+ 
     return (
         <section className="cyberpunk border-none flex h-full flex-col items-center justify-center">
             <div className="w-full h-full pb-4">
@@ -176,11 +173,11 @@ export default function ScanSlide(): JSX.Element {
                     <YAxis stroke="#00e6df" />
                     <Legend />
                     <ReferenceLine y={1000} stroke="#c1ff72" />
-                    <Line type="monotone" dataKey="goal" stroke="#c1ff72" strokeDasharray="5 5" />
-                    <Area type="monotone" dataKey="scans" stroke="#fa66f7" fill="#fa66f7" />
-                    <Line type="monotone" dataKey="endline" stroke="#E92125" />
-                    <Line type="monotone" dataKey="helix" stroke="#FAB816" />
-                    <Line type="monotone" dataKey="reboot" stroke="#59BA93" />
+                    <Line type="monotone" strokeWidth={2} dataKey="goal" stroke="#c1ff72" strokeDasharray="5 5" />
+                    <Area type="monotone" strokeWidth={2} dataKey="scans" stroke="#fa66f7" fill="#fa66f7" />
+                    <Area type="monotone" strokeWidth={2} stackId="1" dataKey="endline" stroke="#E92125" fill="#E92125" />
+                    <Area type="monotone" strokeWidth={2} stackId="1" dataKey="helix" stroke="#FAB816" fill="#FAB816" />
+                    <Area type="monotone" strokeWidth={2} stackId="1" dataKey="reboot" stroke="#59BA93" fill="#59BA93" />
                 </ComposedChart>
             </ResponsiveContainer>
             <h2 className="cyberpunk">Top Technicians</h2>

@@ -11,6 +11,7 @@ export type Store = {
     logs?: Scan[],
     selectedTile: string | null,
     factoryTiles: FactoryTileMeta[],
+    allianceUsers: Record<string, User[]>,
 }
 
 export type Scan = {
@@ -38,7 +39,7 @@ export interface scanState {
     // getUser: (scanId: string) => void,
 }
 
-export type ActionTypes = 'GET_USER' | 'GET_LOGS' | 'GET_TILES' |'CREATE_LOG' | 'PUT_USER' | 'UNSET_USER' | 'SET_SELECTED_TILE' | 'SET_TILE';
+export type ActionTypes = 'GET_USER' | 'GET_LOGS' | 'GET_TILES' | 'GET_ALLIANCE_USERS' |'CREATE_LOG' | 'PUT_USER' | 'UNSET_USER' | 'SET_SELECTED_TILE' | 'SET_TILE';
 
 export interface Action {
     type: ActionTypes,
@@ -50,6 +51,7 @@ export type DispatchFunc = (dispatch: Action) => void;
 type ProviderDispatch = {
     getLogs: () => void,
     unSetUser: () => void,
+    getAllianceUsers: () => void,
     getUser: (scanId: string) => void,
     createLog: (scanId: string) => void,
     getTiles: () => void,

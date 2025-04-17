@@ -1,5 +1,5 @@
 'use client';
-import merge from 'deepmerge';
+import merge, { all } from 'deepmerge';
 import DataContextCreator from './dataContextCreator';
 import {
   Action,
@@ -9,6 +9,7 @@ import {
 import {
   createLog,
   getUser,
+  getAllianceUsers,
   getLogs,
   unSetUser,
   getTiles,
@@ -23,6 +24,7 @@ const appSchema = {
     updated_at: null,
   },
   selectedTile: null,
+  allianceUsers: {},
   factoryTiles: [],
   logs: []
 }
@@ -36,6 +38,9 @@ export const appReducer = (state:AppProviderValues, action: Action) => {
   switch (type) {
     case 'GET_USER':
       clonedState.user = payload;
+      break;
+    case 'GET_ALLIANCE_USERS':
+      clonedState.allianceUsers = payload;
       break;
     case 'GET_LOGS':
       clonedState.logs = payload;
@@ -62,6 +67,7 @@ export const { Context, Provider } = DataContextCreator(
     createLog, 
     getLogs,
     getUser,
+    getAllianceUsers,
     getTiles,
     setSelectedTile,
     unSetUser,

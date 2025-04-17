@@ -33,6 +33,7 @@ export default function Main () {
         createLog = () => {},
         getUser = () => {},
         getLogs = () => {},
+        getAllianceUsers = () => {},
         unSetUser = () => {},
       }: AppProviderValues = useContext(Context);
       const [loading, setLoading] = useState(true);
@@ -40,9 +41,11 @@ export default function Main () {
       const [nfcData, setNfcData] = useState<NfcData | null>(null);
       const [error, setError] = useState<string | null>(null);
       const [drawerOpen, setDrawerOpen] = useState(false);
+      const [drawerSection, setDrawerSection] = useState('home');
       const rifdNumber = useRFIDNumber(readReady);
       const initData = useCallback(() => {
         getLogs();
+        getAllianceUsers();
       }, [getUser]);
       const { user } = state;
       const userId = user ? user.uid : null;
@@ -51,6 +54,13 @@ export default function Main () {
         setDrawerOpen(false);
         unSetUser();
       }
+
+      const changeUserDrawer = (section:string) => {
+        setDrawerSection(section);
+        setDrawerOpen(true);
+      }
+
+
 
       useEffect(() => {
           if (userId && !drawerOpen){
@@ -83,37 +93,7 @@ export default function Main () {
       }
     },[rifdNumber]);
 
-    // useEffect(() => {
-    //   const ws = new WebSocket('ws://localhost:3000/api/nfc');
-  
-    //   ws.onopen = () => {
-    //     console.log('WebSocket connection opened');
-    //     setError(null); // Clear any previous errors
-    //   };
-  
-    //   ws.onmessage = (event) => {
-    //     const data: NfcData = JSON.parse(event.data);
-    //     setNfcData(data);
-    //     console.log('message data', data)
-    //   };
-  
-    //   ws.onerror = (error) => {
-    //     console.error('WebSocket error:', error);
-    //     setError('Failed to connect to the WebSocket server.');
-    //   };
-  
-    //   ws.onclose = () => {
-    //     console.log('WebSocket connection closed');
-    //     setError('WebSocket connection closed.');
-    //   };
-  
-    //   return () => {
-    //     ws.close();
-    //   };
-    // }, []);
-
     
-
     return (
       <>
         <main className="overflow-hidden">
@@ -128,8 +108,8 @@ export default function Main () {
           </Carousel>
           <TouchPulse />
         </main>
-        <Drawer isOpen={drawerOpen} onClose={() => closeUserDrawer()}>
-          <UserDrawer />
+        <Drawer isOpen={drawerOpen} onClose={() => closeUserDrawer()} onDrawerSelect={changeUserDrawer}>
+          <UserDrawer section={drawerSection} />
         </Drawer>
       </>
     ); 
