@@ -1,6 +1,6 @@
 'use client';
 
-import { Children, ReactNode, cloneElement, useCallback, useEffect, useState } from 'react';
+import { Children, ReactNode, cloneElement, use, useCallback, useEffect, useState } from 'react';
 import { useClickAnyWhere, useCountdown, useInterval, useStep } from 'usehooks-ts';
 import { useContext } from 'react';
 import { Context } from '../lib/appContext';
@@ -19,6 +19,7 @@ interface CarouselProps {
     pauseMinutes?: number;
     isPaused?: boolean;
     onDrawerSelect?: (section: string) => void;
+    selectedDrawer?: string;
 }
 
 type Scan = {
@@ -37,6 +38,8 @@ const MAX_STEPS = 4;
 const ONE_SECOND = 1000;
 const PAUSE_MINUTES = 1;
 
+const stepArray = ['', 'home', 'pip', 'factoryGame'];
+
 const baudot = Baudot({
     src: [
         { path: '../fonts/Baudot-Regular.ttf', weight: '400', },
@@ -44,7 +47,7 @@ const baudot = Baudot({
 });
 
 export default function Carousel(props: CarouselProps): JSX.Element {
-    const { children, pauseMinutes = PAUSE_MINUTES, onDrawerSelect = ()=>{} } = props;
+    const { children, pauseMinutes = PAUSE_MINUTES, onDrawerSelect = ()=>{}, selectedDrawer  } = props;
     const {
         state,
     }: AppProviderValues = useContext(Context);
@@ -90,7 +93,6 @@ export default function Carousel(props: CarouselProps): JSX.Element {
     }
 
     const gotoPane = (step: number): void => {
-        const stepArray = ['', 'home', 'pip', 'factoryGame'];
         setStep(step);
         onDrawerSelect(stepArray[step]);
     }
@@ -143,6 +145,15 @@ export default function Carousel(props: CarouselProps): JSX.Element {
             pauseCount();
         }
     }, [props.isPaused, pauseCount]);
+
+    useEffect(() => {
+        if (selectedDrawer) {
+            const index = stepArray.indexOf(selectedDrawer);
+            if (index) {
+                setStep(index);
+            }
+        }
+    }, [selectedDrawer]);
 
 
     return (

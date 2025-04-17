@@ -55,8 +55,6 @@ export default function Main () {
         setDrawerOpen(true);
       }
 
-
-
       useEffect(() => {
           if (userId && !drawerOpen){
               setDrawerOpen(true);
@@ -90,7 +88,7 @@ export default function Main () {
 
     useEffect(() => {
       if (user && typeof user?.meta?.alliance === 'undefined') {
-        setDrawerSection('sponsor');
+        // setDrawerSection('sponsor');
       }
     }, [user]);
 
@@ -102,7 +100,7 @@ export default function Main () {
           <Watermark>
               <Terminal418 />
           </Watermark>
-          <Carousel onDrawerSelect={changeUserDrawer}>
+          <Carousel onDrawerSelect={changeUserDrawer} selectedDrawer={drawerSection}>
               <Summary />
               <ScanSlide />
               <Game />
