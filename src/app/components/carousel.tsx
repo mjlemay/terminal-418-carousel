@@ -149,7 +149,7 @@ export default function Carousel(props: CarouselProps): JSX.Element {
     useEffect(() => {
         if (selectedDrawer) {
             const index = stepArray.indexOf(selectedDrawer);
-            if (index) {
+            if (index > -1) {
                 setStep(index);
             }
         }

@@ -75,10 +75,13 @@ export default function Main () {
 
 
     useEffect(() => {
-      if (rifdNumber.length >= 4 && !loading) {
+      if (rifdNumber.length >= 4 && !loading && rifdNumber !== userId) {
+          unSetUser();
+          setTimeout(() => {
           setLoading(true);
           createLog(rifdNumber);
           getUser(rifdNumber);
+          }, 500);
           setTimeout(() => {
               setReadReady(true);
               setLoading(false);

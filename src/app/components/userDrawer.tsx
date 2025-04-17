@@ -12,9 +12,15 @@ import FourEighteenCollective from '../svgs/418collective';
 import { allianceArray } from '../lib/constants';
 import StateBlockRow from './statblockRow';
 import OneStar from '../svgs/onestar';
-
+import Baudot from 'next/font/local';
 
 const DEVICE_NAME = process.env.NEXT_PUBLIC_DEVICE_NAME || 'unknown_terminal';
+
+const baudot = Baudot({
+    src: [
+        { path: '../fonts/Baudot-Regular.ttf', weight: '400', },
+    ]
+});
 
 type UserDrawerProps = {
     section: string;
@@ -26,22 +32,36 @@ export default function UserDrawer({ section = 'pip', onDrawerSelect = () => { }
         state,
         getUser = () => { },
         getTiles = () => { },
+        unSetUser = () => { },
     }: AppProviderValues = useContext(Context);
     const { user, logs, selectedTile } = state;
     const uid: string | null = user ? user.uid : 'error';
     const logCount = logs ? logs.length : 0;
     const userLogCount = logs ? logs.filter((log) => log.scan_id === uid).length : 0;
-    const userMeta = user ? user.meta : null;
+    let userMeta = user ? user.meta : null;
     const alliance = userMeta ? userMeta.alliance : null;
     const activations = userMeta ? userMeta.activations : 0;
+    const lastSponsored = userMeta ? userMeta.lastSponsored : null;
+    const lastTiled = userMeta ? userMeta.lastTiled : null;
+    const lastAuth = userMeta ? userMeta.lastAuth : null;
     const allianceIndex = alliance ? allianceArray.indexOf(alliance) : -1;
     const [selector, setSelector] = useState(allianceIndex);
-    const allianceIsLocked = userMeta && userMeta.lastSponsored 
-        && moment().isAfter(moment(userMeta.lastSponsored).add(1, 'minutes'))
-        && moment().isBefore(moment(userMeta.lastSponsored).add(1, 'day'));
-    const allianceToBeLocked = userMeta && userMeta.lastSponsored && moment().isBefore(moment(userMeta.lastSponsored).add(1, 'minutes'));
-    const tileLocked = userMeta && userMeta.lastTiled && moment().isBefore(moment(userMeta.lastTiled).add(1, 'hour'));
-    const authLocked = userMeta && userMeta.lastAuth && moment().isBefore(moment(userMeta.lastAuth).add(1, 'hour'));
+    const [softLock, setSoftLock] = useState(false);
+    const allianceIsLocked =  (timestamp:string | null ) => {
+        return timestamp
+        && moment().isAfter(moment(timestamp).add(1, 'minutes'))
+        && moment().isBefore(moment(timestamp).add(1, 'day'));
+    };
+    let allianceToBeLocked = (timestamp:string | null ) => {
+        return timestamp && moment().isBefore(moment(timestamp).add(1, 'minutes'))
+    };
+    let tileLocked = (timestamp:string | null ) => {
+        console.log('tile locked at', timestamp);
+        return timestamp && moment().isBefore(moment(timestamp).add(1, 'hour'))
+    };
+    const authLocked = (timestamp:string | null ) => {
+        return timestamp && moment().isBefore(moment(timestamp).add(1, 'hour'))
+    };
 
     const updateUserAlliance = async (allianceIndex: number) => {
         setSelector(allianceIndex);
@@ -80,11 +100,11 @@ export default function UserDrawer({ section = 'pip', onDrawerSelect = () => { }
         const data = await response.json();
         if (response.ok) {
             console.log('Alliance updated successfully:', data);
-            getUser(uid as string);
         }
         else {
             console.error('Error updating alliance:', data);
         }
+        getUser(uid as string);
     }
 
     const updateUserActivations = async () => {
@@ -103,11 +123,11 @@ export default function UserDrawer({ section = 'pip', onDrawerSelect = () => { }
         const data = await response.json();
         if (response.ok) {
             console.log('Alliance updated successfully:', data);
-            getUser(uid as string);
         }
         else {
             console.error('Error updating alliance:', data);
         }
+        getUser(uid as string);
     }
 
     const updateFactoryTile = async (isPowered: string, poweredBy: string) => {
@@ -127,11 +147,11 @@ export default function UserDrawer({ section = 'pip', onDrawerSelect = () => { }
             const data = await response.json();
             if (response.ok) {
                 updateUserLastCLick('lastTiled');
-                getUser(uid as string);
             }
             else {
                 console.error(`Error creating tile ${selectedTile}`, data);
             }
+            getUser(uid as string);
         } else {
             const currentMeta = factoryTile.meta ? JSON.parse(factoryTile.meta) : {};
             const tileId = factoryTile.id;
@@ -152,6 +172,7 @@ export default function UserDrawer({ section = 'pip', onDrawerSelect = () => { }
                 console.error(`Error updating tile ${selectedTile}`, data);
             }
         }
+        setSoftLock(true);
         getTiles();
     }
 
@@ -185,14 +206,16 @@ export default function UserDrawer({ section = 'pip', onDrawerSelect = () => { }
             </>,
             factoryGame: <>
                 <h2 className="cyberpunk mb-4">SELECTED TILE</h2>
-                {tileLocked && (<p>⇐ COOLDOWN FOR 1 HOUR ⇒</p>)}
-                {!tileLocked && user?.meta?.alliance && (<ActionButton handleClick={() => updateFactoryTile('true', user?.meta?.alliance || 'default')}>ACTIVATE</ActionButton>)}
-                {!tileLocked && (<ActionButton handleClick={() => updateFactoryTile('false', 'default')}>DEACTIVATE</ActionButton>)}
+                {(softLock || tileLocked(lastTiled)) && (<p>⇐ COOLDOWN FOR 1 HOUR ⇒</p>)}
+                {!user?.meta?.alliance && (<p>Activation not Sponsored.<br />Please Select a sponsor.</p>)}
+                {!tileLocked(lastTiled) && !softLock && user?.meta?.alliance && (<ActionButton handleClick={() => updateFactoryTile('true', user?.meta?.alliance || 'default')}>ACTIVATE</ActionButton>)}
+                {!tileLocked(lastTiled) && !softLock && user?.meta?.alliance && (<ActionButton handleClick={() => updateFactoryTile('false', 'default')}>DEACTIVATE</ActionButton>)}
+                <span className={`${baudot.className} text-2xs text-right pr-2 text-teal`}>{lastTiled}</span>
             </>,
             sponsor: <>
                 <h2 className="cyberpunk mb-4">SELECT SPONSOR</h2>
                 <div className='flex flex-col items-center justify-center'>
-                    {allianceToBeLocked && (<span>⇐ Locks in 10 mins for 24hrs ⇒</span>)}
+                    {allianceToBeLocked(lastSponsored) && (<span>⇐ Locks in 10 mins for 24hrs ⇒</span>)}
                 </div>
                 <div>
                     {selector == -1 && <FourEighteenCollective width="100%" />}
@@ -200,14 +223,17 @@ export default function UserDrawer({ section = 'pip', onDrawerSelect = () => { }
                     {selector == 1 && <Helix width="100%" />}
                     {selector == 2 && <Reboot width="100%" />}
                 </div>
-                {!allianceIsLocked && (
+                {!allianceIsLocked(lastSponsored) && (
                     <ValueSelectorRow selectedIndex={selector} clickHandler={(num) => updateUserAlliance(num)}>
                         <span><Endline width="100%" /></span>
                         <span><Helix width="100%" /></span>
                         <span><Reboot width="100%" /></span>
                     </ValueSelectorRow>
                 )}
-                {allianceIsLocked && (<p>Sponsorships are in place for 24 hours and will auto renew every 24 hours.</p>)}
+                {allianceIsLocked(lastSponsored) && (<p>Sponsorships are in place for 24 hours and will auto renew every 24 hours.</p>)}
+                {allianceToBeLocked(lastSponsored) && (
+                    <ActionButton handleClick={() => onDrawerSelect('factoryGame')}>FACTORY POWER</ActionButton>
+                )}
             </>,
         }
 
@@ -215,6 +241,9 @@ export default function UserDrawer({ section = 'pip', onDrawerSelect = () => { }
     }
 
     useEffect(() => {
+        if (user) {
+            userMeta = user ? user.meta : null;
+        }
     },[user]);
 
     return (
