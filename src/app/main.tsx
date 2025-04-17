@@ -15,9 +15,6 @@ import Watermark from "./components/watermark";
 import Terminal418 from "./svgs/terminal418";
 import Drawer  from "./components/drawer";
 import UserDrawer from "./components/userDrawer";
-import { userAgent } from "next/server";
-import { set } from "lodash";
-import { constrainedMemory } from "process";
 
 
 interface NfcData {
@@ -38,8 +35,6 @@ export default function Main () {
       }: AppProviderValues = useContext(Context);
       const [loading, setLoading] = useState(true);
       const [readReady, setReadReady] = useState(true);
-      const [nfcData, setNfcData] = useState<NfcData | null>(null);
-      const [error, setError] = useState<string | null>(null);
       const [drawerOpen, setDrawerOpen] = useState(false);
       const [drawerSection, setDrawerSection] = useState('home');
       const rifdNumber = useRFIDNumber(readReady);
@@ -93,6 +88,12 @@ export default function Main () {
       }
     },[rifdNumber]);
 
+    useEffect(() => {
+      if (user && typeof user?.meta?.alliance === 'undefined') {
+        setDrawerSection('sponsor');
+      }
+    }, [user]);
+
     
     return (
       <>
@@ -101,7 +102,7 @@ export default function Main () {
           <Watermark>
               <Terminal418 />
           </Watermark>
-          <Carousel>
+          <Carousel onDrawerSelect={changeUserDrawer}>
               <Summary />
               <ScanSlide />
               <Game />
@@ -109,7 +110,7 @@ export default function Main () {
           <TouchPulse />
         </main>
         <Drawer isOpen={drawerOpen} onClose={() => closeUserDrawer()} onDrawerSelect={changeUserDrawer}>
-          <UserDrawer section={drawerSection} />
+          <UserDrawer section={drawerSection} onDrawerSelect={changeUserDrawer} />
         </Drawer>
       </>
     ); 

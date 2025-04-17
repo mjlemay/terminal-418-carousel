@@ -18,6 +18,7 @@ interface CarouselProps {
     selectedPane?: string;
     pauseMinutes?: number;
     isPaused?: boolean;
+    onDrawerSelect?: (section: string) => void;
 }
 
 type Scan = {
@@ -43,7 +44,7 @@ const baudot = Baudot({
 });
 
 export default function Carousel(props: CarouselProps): JSX.Element {
-    const { children, pauseMinutes = PAUSE_MINUTES } = props;
+    const { children, pauseMinutes = PAUSE_MINUTES, onDrawerSelect = ()=>{} } = props;
     const {
         state,
     }: AppProviderValues = useContext(Context);
@@ -89,7 +90,9 @@ export default function Carousel(props: CarouselProps): JSX.Element {
     }
 
     const gotoPane = (step: number): void => {
+        const stepArray = ['', 'home', 'pip', 'factoryGame'];
         setStep(step);
+        onDrawerSelect(stepArray[step]);
     }
 
     const goCount = useCallback(() => {

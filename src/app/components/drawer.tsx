@@ -3,6 +3,7 @@ import { ReactNode, useEffect, useState } from "react";
 import Exit from "../svgs/exit";
 import Sponsor from "../svgs/sponsor";
 import ActionButton from "./actionButton";
+import Neoband from "../svgs/neoband";
 
 interface DrawerProps {
   isOpen: boolean;
@@ -48,7 +49,7 @@ export const Drawer = ({ isOpen, onClose, children, onDrawerSelect = ()=>{}, tit
           <motion.div
             key="drawer-close"
             initial={{ x: "100%", y: "20%" }}
-            animate={{ x: "-3vw", y: "14vh" }}
+            animate={{ x: "-6vw", y: "14vh" }}
             exit={{ x: "100%", y: "20%" }}
             transition={{
               type: "tween",
@@ -57,6 +58,11 @@ export const Drawer = ({ isOpen, onClose, children, onDrawerSelect = ()=>{}, tit
             }}
             className="fixed inset-y-0 right-0 z-90 max-w-sm max-h-[100px]"
           ><div className="flex gap-4 backdrop-blur-sm bg-gray-900/90">
+             <ActionButton
+                handleClick={() => onDrawerSelect('home')}
+              >
+                <Neoband />
+              </ActionButton>
               <ActionButton
                 handleClick={() => onDrawerSelect('sponsor')}
               >

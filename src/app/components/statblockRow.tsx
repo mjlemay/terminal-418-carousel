@@ -13,7 +13,7 @@ export default function StateBlockRow(props:SBProps):JSX.Element {
        {title && <h3 className="cyberpunk">{title}</h3>}
             <div className="flex flex-row justify-between items-center">
                 {icon && <div className="basis-1/3">
-                    <div className="max-h-[8rem] max-w-[8rem]">
+                    <div className="max-h-[8rem] max-w-[8rem] p-2">
                         {icon}
                     </div>
                 </div>
