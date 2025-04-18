@@ -12,6 +12,9 @@ export function useRFIDNumber(enabled:boolean) {
 
     const handleUserKeyPress = useCallback((event:KeyboardEvent) => {
         const { key } = event;
+        if (key === 'Meta' || key === 'Enter' || key === 'Shift' || key === 'Control' || key === 'Alt') {
+            return;
+        }
         const nextDate = new Date();
         let cps = nextDate.getTime() - lastDate.getTime();
         if (cps >= WAIT) {
