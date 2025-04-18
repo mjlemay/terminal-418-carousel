@@ -112,6 +112,7 @@ const FactoryFloorGame = () => {
   const sceneRef = useRef<Scene | null>(null);
   const engineRef = useRef<Engine | null>(null);
   const tileGroupsRef = useRef<TransformNode[]>([]);
+  const materialCache: Record<string, StandardMaterial> = {};
 
   const updateTiles = (latestTiles = factoryTiles) => {
     if (!sceneRef.current || !tileGroupsRef.current.length || !latestTiles.length) {
@@ -128,27 +129,20 @@ const FactoryFloorGame = () => {
       const tileMeta = tileDatum ? JSON.parse(tileDatum.meta as string) : defaultTileMeta;
       const glowIndex = allianceArray.indexOf(tileMeta.poweredBy);
       const allianceGlow = factionGlow[glowIndex >= 0 ? glowIndex : 3];
+      const cacheKey = `alliance_${glowIndex}`;
+      if (!materialCache[cacheKey]) {
+        const newMaterial = new StandardMaterial(cacheKey, sceneRef.current!);
+        newMaterial.diffuseColor = allianceGlow.diffuseColor.clone();
+        newMaterial.emissiveColor = allianceGlow.emissiveColor.clone();
+        newMaterial.ambientColor = allianceGlow.ambientColor.clone();
+        newMaterial.specularColor = Color3.Black();
+        newMaterial.freeze(); // Freeze material if it won't change
+        materialCache[cacheKey] = newMaterial;
+      }
+
       tileGroup.getChildMeshes(false).forEach(mesh => {
-        if (mesh.material?.name.includes("M_0063") || mesh.material?.name.includes("alliance_material")) { // More flexible name check
-          // Create new material for each mesh
-          const newMaterial = new StandardMaterial(`tile_${tileName}_alliance_material`, sceneRef.current!);
-
-          // Apply faction colors
-          newMaterial.diffuseColor = allianceGlow.diffuseColor.clone();
-          newMaterial.emissiveColor = allianceGlow.emissiveColor.clone();
-          newMaterial.ambientColor = allianceGlow.ambientColor.clone();
-
-          // Configure material properties
-          newMaterial.specularColor = Color3.Black(); // No specular highlights
-          newMaterial.alpha = 1.0;
-
-          // Apply to mesh
-          mesh.material = newMaterial;
-
-          // Dispose old material if needed
-          if (mesh.material && mesh.material !== newMaterial) {
-            mesh.material.dispose();
-          }
+        if (mesh.material?.name.includes("M_0063") || mesh.material?.name.includes("alliance_material")) {
+          mesh.material = materialCache[cacheKey];
         }
       });
     });
@@ -179,6 +173,13 @@ const FactoryFloorGame = () => {
     scene.collisionsEnabled = true;
     let fadeAlpha = 0;
     scene.clearColor = new Color4(0.1, 0.1, 0.15, fadeAlpha); // Your bg color + alpha
+
+    scene.autoClear = false; // Manual clearing
+    scene.autoClearDepthAndStencil = false;
+    scene.blockMaterialDirtyMechanism = true; // For static scenes
+    scene.skipPointerMovePicking = true;
+    scene.skipPointerDownPicking = false; // Only enable what you need
+    scene.skipFrustumClipping = true;
 
     // After assets load (in meshTask.onSuccess):
     const fadeIn = () => {
@@ -497,9 +498,12 @@ const FactoryFloorGame = () => {
 
     assetsManager.load();
 
-    // Render loop
-    // Add this to your render loop
+    let lastRenderTime = 0;
+    const targetFPS = 12; // Reduce if acceptable
     engine.runRenderLoop(() => {
+      const now = performance.now();
+      if (now - lastRenderTime < 1000 / targetFPS) return;
+      lastRenderTime = now;
       if (indicatorRef.current) {
         // Gentle pulsing animation with opacity variation
         const pulse = Math.sin(performance.now() * 0.005) * 0.15;
@@ -554,6 +558,23 @@ const FactoryFloorGame = () => {
       tileGroupsRef.current = [];
     };
   }, []);
+
+  // Add this cleanup function to your useEffect cleanup:
+useEffect(() => {
+  return () => {
+    // Dispose all materials in cache
+    Object.values(materialCache).forEach(mat => mat.dispose());
+    
+    // Dispose all meshes
+    sceneRef.current?.meshes.forEach(mesh => mesh.dispose());
+    
+    // Dispose all textures
+    sceneRef.current?.textures.forEach(texture => texture.dispose());
+    
+    // Dispose engine
+    engineRef.current?.dispose();
+  };
+}, []);
 
   return <canvas ref={canvasRef} style={{ width: '100%', height: '100vh' }} />;
 };

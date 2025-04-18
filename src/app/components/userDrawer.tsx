@@ -49,15 +49,15 @@ export default function UserDrawer({ section = 'pip', onDrawerSelect = () => { }
     const [softLock, setSoftLock] = useState(false);
     const [softAuthLock, setSoftAuthLock] = useState(false);
     const [successfullyActivated, setSuccessfullyActivated] = useState(false);
-    const allianceIsLocked =  (timestamp:string | null ) => {
+    const allianceIsLocked = (timestamp: string | null) => {
         return timestamp
-        && moment().isAfter(moment(timestamp).add(1, 'minutes'))
-        && moment().isBefore(moment(timestamp).add(1, 'day'));
+            && moment().isAfter(moment(timestamp).add(1, 'minutes'))
+            && moment().isBefore(moment(timestamp).add(1, 'day'));
     };
-    let allianceToBeLocked = (timestamp:string | null ) => {
+    let allianceToBeLocked = (timestamp: string | null) => {
         return timestamp && moment().isBefore(moment(timestamp).add(1, 'minutes'))
     };
-    let tileLocked = (timestamp:string | null ) => {
+    let tileLocked = (timestamp: string | null) => {
         return timestamp && moment().isBefore(moment(timestamp).add(1, 'hour'))
     };
     const authIndex = () => {
@@ -128,7 +128,7 @@ export default function UserDrawer({ section = 'pip', onDrawerSelect = () => { }
             activations = 0;
         }
         const newActivations = activations + 1;
-        const meta = JSON.stringify({ ...oldMeta, activations:newActivations, lastAuth: now.format() });
+        const meta = JSON.stringify({ ...oldMeta, activations: newActivations, lastAuth: now.format() });
         const response = await fetch(`/api/user/${uid}`, {
             method: 'PUT',
             headers: {
@@ -192,16 +192,16 @@ export default function UserDrawer({ section = 'pip', onDrawerSelect = () => { }
         getTiles();
     }
 
-    const checkActivations = async (word:string) => {
+    const checkActivations = async (word: string) => {
         const correctPhrase = validAuthPhrase();
         setSoftAuthLock(true);
-        if (word === correctPhrase){
+        if (word === correctPhrase) {
             setSuccessfullyActivated(true);
             setTimeout(() => {
                 setSuccessfullyActivated(false);
                 updateUserActivations();
             }
-            , 15000);
+                , 15000);
         } else {
             updateUserLastCLick('lastAuth');
         }
@@ -235,38 +235,41 @@ export default function UserDrawer({ section = 'pip', onDrawerSelect = () => { }
                 </div>
             </>,
             sync: <>
-            <h2 className="cyberpunk mb-4">SYNCHRONIZE TERMINAL</h2>
-            <div className="flex flex-col m-4 gap-4">
-                {!tileLocked(lastAuth) && !softAuthLock && authOptions()}
-                {successfullyActivated && (
-                    <div className='border-2 border-teal rounded-lg p-4 m-4 text-center text-2xl'>
-                        <h3>AUTHENTICATION SUCCESSFUL</h3>
-                        <OneStar />
-                    </div>
-                )}
-                {(tileLocked(lastAuth) || softAuthLock) && (
-                    <p>Authentication attempted. Cool down is 1 hour.</p>
-                )}
-            </div>
+                <h2 className="cyberpunk mb-4">SYNCHRONIZE TERMINAL</h2>
+                <div className="flex flex-col m-4 gap-4">
+                    {!tileLocked(lastAuth) && !softAuthLock && authOptions()}
+                    {successfullyActivated && (
+                        <div className='border-2 border-teal rounded-lg p-4 m-4 text-center text-2xl'>
+                            <h3>AUTHENTICATION SUCCESSFUL</h3>
+                            <OneStar />
+                        </div>
+                    )}
+                    {(tileLocked(lastAuth) || softAuthLock) && (
+                        <p>Authentication attempted. Cool down is 1 hour.</p>
+                    )}
+                </div>
             </>,
             auth: <>
-            <h2 className="cyberpunk mb-4">AUTHENTICATE TERMINAL</h2>
-            <div className="flex flex-col m-4 gap-4">
-                <p>PLEASE DELIVER THIS PHRASE TO ANOTHER TERMINAL TO SYNC</p>
-                <div
-                className='border-2 border-teal rounded-lg p-4 m-4 text-center text-2xl'
-                data-augmented-ui="tl-clip tr-clip br-clip-x bl-clip both"
-                >
-                    <h3>{authPhrase()}</h3>
+                <h2 className="cyberpunk mb-4">AUTHENTICATE TERMINAL</h2>
+                <div className="flex flex-col m-4 gap-4">
+                    <p>PLEASE DELIVER THIS PHRASE TO ANOTHER TERMINAL TO SYNC</p>
+                    <div
+                        className='border-2 border-teal rounded-lg p-4 m-4 text-center text-2xl'
+                        data-augmented-ui="tl-clip tr-clip br-clip-x bl-clip both"
+                    >
+                        <h3>{authPhrase()}</h3>
+                    </div>
                 </div>
-            </div>
             </>,
             factoryGame: <>
                 <h2 className="cyberpunk mb-4">SELECTED TILE</h2>
+                <p>{selectedTile ? selectedTile : 'NO TILE SELECTED'}</p>
                 {(softLock || tileLocked(lastTiled)) && (<p>⇐ COOLDOWN FOR 1 HOUR ⇒</p>)}
                 {!user?.meta?.alliance && (<p>Activation not Sponsored.<br />Please Select a sponsor.</p>)}
-                {!tileLocked(lastTiled) && !softLock && user?.meta?.alliance && (<ActionButton handleClick={() => updateFactoryTile('true', user?.meta?.alliance || 'default')}>ACTIVATE</ActionButton>)}
-                {!tileLocked(lastTiled) && !softLock && user?.meta?.alliance && (<ActionButton handleClick={() => updateFactoryTile('false', 'default')}>DEACTIVATE</ActionButton>)}
+                <div style={{ opacity: selectedTile ? 1 : 0.5 }}>
+                    {!tileLocked(lastTiled) && !softLock && user?.meta?.alliance && (<ActionButton handleClick={() => updateFactoryTile('true', user?.meta?.alliance || 'default')}>ACTIVATE</ActionButton>)}
+                    {!tileLocked(lastTiled) && !softLock && user?.meta?.alliance && (<ActionButton handleClick={() => updateFactoryTile('false', 'default')}>DEACTIVATE</ActionButton>)}
+                </div>
                 <span className={`${baudot.className} text-2xs text-right pr-2 text-teal`}>{lastTiled}</span>
             </>,
             sponsor: <>
@@ -301,7 +304,7 @@ export default function UserDrawer({ section = 'pip', onDrawerSelect = () => { }
         if (user) {
             userMeta = user ? user.meta : null;
         }
-    },[user]);
+    }, [user]);
 
     return (
         <div className="border-none flex h-full flex-col items-center justify-center p-4 pt-8 relative">
