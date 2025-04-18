@@ -30,7 +30,7 @@ import "@babylonjs/loaders/glTF";
 
 
 // Grid setup
-const GRID_SIZE = 30;
+const GRID_SIZE = 16;
 const TILE_SIZE = 40;
 const halfGrid = GRID_SIZE / 2;
 const TILE_GAP = 0.025;
