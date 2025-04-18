@@ -1,13 +1,9 @@
 import { useState, useCallback, useEffect } from "react";
 
-const WAIT = 300;
-const CPS_MIN = 3;
-const CPS_MAX = 30;
 const ID_LENGTH = parseInt(process.env.NEXT_PUBLIC_ID_LENGTH || '8', 10); 
 export function useRFIDNumber(enabled:boolean) {
     const [ codeString, setCodeString ] = useState('');
     const [ rfidCode, setRfidCode ] = useState('');
-    const [ lastDate, setLastDate ] = useState(new Date());
     const isEnabled = enabled || false;
 
     const handleUserKeyPress = useCallback((event:KeyboardEvent) => {
@@ -15,46 +11,29 @@ export function useRFIDNumber(enabled:boolean) {
         if (key === 'Meta' || key === 'Enter' || key === 'Shift' || key === 'Control' || key === 'Alt') {
             return;
         }
-        const nextDate = new Date();
-        let cps = nextDate.getTime() - lastDate.getTime();
-        if (cps >= WAIT) {
-            setRfidCode('');
-            cps = CPS_MIN; //allows for first character to pass through
-        }
-
-        if (
-            isEnabled
-            && key !== 'enter'
-            && cps <= CPS_MAX
-            && cps >= CPS_MIN
-        ) {
-            const newCode = codeString + key;
-            setCodeString(newCode);
-            setRfidCode('');
-        }
-        if (
-            cps > CPS_MAX
-            || cps < CPS_MIN
-        ) {
-            setCodeString(''); // resets reader if cps is inconsistent
-        }
+        const newCode = codeString + key;
+        setCodeString(newCode);
         // clear values if rfid value or has reach id length
         if (
             (
                 isEnabled
-                && key !== 'enter'
-                && codeString.length === ID_LENGTH
+                && newCode.length === ID_LENGTH
             )
         ) {
             const hexadecimalRegex = new RegExp('^(0x|0X)?[a-fA-F0-9]+$');     
             if (hexadecimalRegex.test(codeString)) {
+                console.log('codeString', codeString);
                 setRfidCode(codeString);
+                setTimeout(() => {
+                    setRfidCode('');
+                    setCodeString('')
+                }
+                , 300);
             }
             setCodeString('');
         }
-
-        setLastDate(nextDate);
-    }, [codeString, isEnabled, lastDate]);
+        
+    }, [codeString, isEnabled]);
 
     useEffect(() => {
         window.addEventListener("keydown", handleUserKeyPress);
