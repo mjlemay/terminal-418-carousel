@@ -1,10 +1,10 @@
 import { WebSocketServer } from 'ws';
 import { NextResponse } from 'next/server';
 import { Server } from 'http';
-import { NFC } from 'nfc-pcsc';
+// import { NFC } from 'nfc-pcsc';
 
-// Create an instance of NFC
-const nfc = new NFC();
+// // Create an instance of NFC
+// const nfc = new NFC();
 
 // Create a WebSocket server
 let wss: WebSocketServer;
@@ -17,30 +17,30 @@ const initWebSocketServer = (server: Server) => {
     console.log('WebSocket connection established');
 
     // Handle NFC reader events
-    nfc.on('reader', (reader) => {
-      console.log(`Reader detected: ${reader.reader.name}`);
+    // nfc.on('reader', (reader) => {
+    //   console.log(`Reader detected: ${reader.reader.name}`);
 
-      // Handle card detection
-      reader.on('card', (card) => {
-        console.log(`Card detected: ${card.uid}`);
-        ws.send(JSON.stringify({ uid: card.uid }));
-      });
+    //   // Handle card detection
+    //   reader.on('card', (card) => {
+    //     console.log(`Card detected: ${card.uid}`);
+    //     ws.send(JSON.stringify({ uid: card.uid }));
+    //   });
 
-      // Handle errors
-      reader.on('error', (err) => {
-        console.error(`Reader error: ${err}`);
-      });
+    //   // Handle errors
+    //   reader.on('error', (err) => {
+    //     console.error(`Reader error: ${err}`);
+    //   });
 
-      // Handle reader disconnection
-      reader.on('end', () => {
-        console.log(`Reader disconnected: ${reader.reader.name}`);
-      });
-    });
+    //   // Handle reader disconnection
+    //   reader.on('end', () => {
+    //     console.log(`Reader disconnected: ${reader.reader.name}`);
+    //   });
+    // });
 
-    // Handle NFC initialization errors
-    nfc.on('error', (err) => {
-      console.error(`NFC error: ${err}`);
-    });
+    // // Handle NFC initialization errors
+    // nfc.on('error', (err) => {
+    //   console.error(`NFC error: ${err}`);
+    // });
   });
 
   // Attach WebSocket server to the HTTP server

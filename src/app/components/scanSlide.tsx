@@ -50,7 +50,7 @@ export default function ScanSlide(): JSX.Element {
           }
           topTenUsers.sort((a:any, b:any) => parseFloat(b.value) - parseFloat(a.value));
           if (topTenUsers && topTenUsers.length >= 11) {
-            topTenUsers = topTenUsers.slice(0, 20);
+            topTenUsers = topTenUsers.slice(0, 10);
           }
           return topTenUsers;
         }
