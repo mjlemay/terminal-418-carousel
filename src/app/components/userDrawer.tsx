@@ -14,6 +14,8 @@ import StateBlockRow from './statblockRow';
 import OneStar from '../svgs/onestar';
 import Baudot from 'next/font/local';
 import { shuffle } from 'lodash';
+import IconFactory from '../svgs/iconFactory';
+
 
 const DEVICE_NAME = process.env.NEXT_PUBLIC_DEVICE_NAME || 'unknown_terminal';
 
@@ -33,6 +35,7 @@ export default function UserDrawer({ section = 'pip', onDrawerSelect = () => { }
         state,
         getUser = () => { },
         getTiles = () => { },
+        setSelectedTile = () => { },
     }: AppProviderValues = useContext(Context);
     const { user, logs, selectedTile } = state;
     const uid: string | null = user ? user.uid : 'error';
@@ -49,6 +52,7 @@ export default function UserDrawer({ section = 'pip', onDrawerSelect = () => { }
     const [softLock, setSoftLock] = useState(false);
     const [softAuthLock, setSoftAuthLock] = useState(false);
     const [successfullyActivated, setSuccessfullyActivated] = useState(false);
+    const [successfullyTiled, setSuccessfullyTiled] = useState(false);
     const allianceIsLocked = (timestamp: string | null) => {
         return timestamp
             && moment().isAfter(moment(timestamp).add(1, 'minutes'))
@@ -97,6 +101,7 @@ export default function UserDrawer({ section = 'pip', onDrawerSelect = () => { }
         else {
             console.error('Error updating alliance:', data);
         }
+        setSelectedTile('');
     }
 
     const updateUserLastCLick = async (lastKey: string) => {
@@ -188,6 +193,13 @@ export default function UserDrawer({ section = 'pip', onDrawerSelect = () => { }
                 console.error(`Error updating tile ${selectedTile}`, data);
             }
         }
+        setSelectedTile('');
+        setSuccessfullyTiled(true);
+        setTimeout(() => {
+            setSuccessfullyTiled(false);
+            updateUserActivations();
+        }
+        , 15000);
         setSoftLock(true);
         getTiles();
     }
@@ -263,19 +275,27 @@ export default function UserDrawer({ section = 'pip', onDrawerSelect = () => { }
             </>,
             factoryGame: <>
                 <h2 className="cyberpunk mb-4">SELECTED TILE</h2>
-                <p>{selectedTile ? selectedTile : 'NO TILE SELECTED'}</p>
-                {(softLock || tileLocked(lastTiled)) && (<p>⇐ COOLDOWN FOR 1 HOUR ⇒</p>)}
+                <div className="p-4">
+                    <h4>{selectedTile ? selectedTile : 'NO TILE SELECTED'}</h4>
+                </div>
+                {(softLock || tileLocked(lastTiled) && !successfullyTiled) && (<p>⇐ COOLDOWN FOR 1 HOUR ⇒</p>)}
                 {!user?.meta?.alliance && (<p>Activation not Sponsored.<br />Please Select a sponsor.</p>)}
-                <div style={{ opacity: selectedTile ? 1 : 0.5 }}>
+                <div style={{ opacity: selectedTile ? 1 : 0.5 }} className='p=2'>
                     {!tileLocked(lastTiled) && !softLock && user?.meta?.alliance && (<ActionButton handleClick={() => updateFactoryTile('true', user?.meta?.alliance || 'default')}>ACTIVATE</ActionButton>)}
                     {!tileLocked(lastTiled) && !softLock && user?.meta?.alliance && (<ActionButton handleClick={() => updateFactoryTile('false', 'default')}>DEACTIVATE</ActionButton>)}
                 </div>
                 <span className={`${baudot.className} text-2xs text-right pr-2 text-teal`}>{lastTiled}</span>
+                {successfullyTiled && (
+                        <div className='border-2 border-teal rounded-lg p-4 m-4 text-center text-2xl'>
+                            <h3>TILE POWERED NEXT CYCLE</h3>
+                            <div className='max-w-[100px]'><IconFactory /></div>
+                        </div>
+                    )}
             </>,
             sponsor: <>
                 <h2 className="cyberpunk mb-4">SELECT SPONSOR</h2>
                 <div className='flex flex-col items-center justify-center'>
-                    {allianceToBeLocked(lastSponsored) && (<span>⇐ Locks in 10 mins for 24hrs ⇒</span>)}
+                    {allianceToBeLocked(lastSponsored) && (<p>⇐ Locks in 10 mins for 24hrs ⇒</p>)}
                 </div>
                 <div>
                     {selector == -1 && <FourEighteenCollective width="100%" />}

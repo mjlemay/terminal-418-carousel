@@ -1,7 +1,7 @@
 
 type SBProps = {
     icon: React.ReactNode;
-    title: string;
+    title?: string;
     value: number;
     goal?: number;
 }
