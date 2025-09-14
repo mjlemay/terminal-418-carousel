@@ -36,3 +36,11 @@ bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+## Run In Docker
+The docker will stand up a postgres container so that standing up your own database will not be necessary.
+
+To run docker, you can use the following command:
+``` docker compose up -d```
+
+Like the previous command, the app will be available at the url `localhost:3000`
