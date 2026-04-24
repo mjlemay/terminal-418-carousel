@@ -1,56 +1,56 @@
 import { NextResponse } from 'next/server';
 import db from '@/db/db';
 import { users, scans } from '@/db/schema';
-import { min } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const allUsers = await db.select().from(users);
-
-  const firstScans = await db
-    .select({
-      scan_id: scans.scan_id,
-      first_login: min(scans.created_at),
-    })
-    .from(scans)
-    .groupBy(scans.scan_id);
-
-  const firstScanMap = new Map(
-    firstScans.map((s) => [s.scan_id, s.first_login])
-  );
-
-  // Get all scans to derive distinct years attended per user
+  // Build roster from scans (the authoritative source of who has visited)
   const allScans = await db
     .select({ scan_id: scans.scan_id, created_at: scans.created_at })
     .from(scans);
 
-  const yearsMap = new Map<string | null, Set<number>>();
+  // Load users table for name/alliance metadata (may not have entries for all scan_ids)
+  const allUsers = await db.select().from(users);
+  const userMap = new Map(
+    allUsers.map((u) => [u.user_id, u])
+  );
+
+  // Aggregate per scan_id: first login and distinct years
+  const playerMap = new Map<string, { first_login: Date; years: Set<number> }>();
   for (const scan of allScans) {
     if (!scan.scan_id || !scan.created_at) continue;
+    const existing = playerMap.get(scan.scan_id);
     const year = new Date(scan.created_at).getFullYear();
-    if (!yearsMap.has(scan.scan_id)) {
-      yearsMap.set(scan.scan_id, new Set());
+    if (existing) {
+      if (scan.created_at < existing.first_login) {
+        existing.first_login = scan.created_at;
+      }
+      existing.years.add(year);
+    } else {
+      playerMap.set(scan.scan_id, {
+        first_login: scan.created_at,
+        years: new Set([year]),
+      });
     }
-    yearsMap.get(scan.scan_id)!.add(year);
   }
 
-  const roster = allUsers.map((user) => {
-    const meta = user.meta ? JSON.parse(user.meta) : null;
-    const years = yearsMap.get(user.user_id);
+  const roster = Array.from(playerMap.entries()).map(([scan_id, data]) => {
+    const user = userMap.get(scan_id);
+    const meta = user?.meta ? JSON.parse(user.meta) : null;
     return {
-      user_id: user.user_id,
+      user_id: scan_id,
       name: meta?.name ?? null,
       alliance: meta?.alliance ?? null,
-      first_login: firstScanMap.get(user.user_id) ?? user.created_at,
-      years_attended: years ? Array.from(years).sort() : [],
+      first_login: data.first_login,
+      years_attended: Array.from(data.years).sort(),
     };
   });
 
   // Sort by first login ascending
   roster.sort((a, b) => {
-    const aTime = a.first_login ? new Date(a.first_login).getTime() : 0;
-    const bTime = b.first_login ? new Date(b.first_login).getTime() : 0;
+    const aTime = new Date(a.first_login).getTime();
+    const bTime = new Date(b.first_login).getTime();
     return aTime - bTime;
   });
 
